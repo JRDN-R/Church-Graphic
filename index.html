@@ -29,6 +29,9 @@
   #fireglow{z-index:5;mix-blend-mode:screen;opacity:1}
   #panel{position:fixed;left:0;right:0;bottom:0;z-index:1000;min-height:104px;max-height:min(42vh,260px);max-height:min(42dvh,260px);display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:rgba(6,6,16,.94);border-top:1px solid rgba(255,255,255,.04);overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
   #tabs{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+  #topExportBtn{position:fixed;top:14px;right:14px;z-index:2000;appearance:none;-webkit-appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid rgba(150,132,255,.38);border-radius:999px;padding:7px 11px;background:rgba(118,96,255,.22);color:rgba(255,255,255,.82);font-size:8.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 0 18px rgba(110,90,255,.12);transition:background .2s,box-shadow .2s,transform .2s}
+  #topExportBtn:hover{background:rgba(118,96,255,.36);box-shadow:0 0 22px rgba(110,90,255,.18);transform:translateY(-1px)}
+  #topExportBtn svg{width:13px;height:13px;display:block;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
   .tab-btn{appearance:none;-webkit-appearance:none;border:1px solid rgba(255,255,255,.07);border-radius:999px;padding:7px 13px;background:rgba(255,255,255,.045);color:rgba(255,255,255,.42);font-size:9px;font-weight:800;letter-spacing:1.7px;text-transform:uppercase;cursor:pointer}
   .tab-btn.active{background:rgba(118,96,255,.22);border-color:rgba(150,132,255,.38);color:rgba(255,255,255,.78);box-shadow:0 0 18px rgba(110,90,255,.12)}
   .tab-panel{display:none;align-items:center;justify-content:center;gap:16px 24px;flex-wrap:wrap}
@@ -45,11 +48,19 @@
   #exportBtn:hover:not(:disabled){background:rgba(118,96,255,.36);box-shadow:0 0 22px rgba(110,90,255,.18)}
   #exportBtn:disabled{opacity:.45;cursor:default}
   #exportProgress{width:100%;max-width:420px}.export-bar-track{height:6px;overflow:hidden;background:rgba(255,255,255,.07);border-radius:4px}.export-bar-fill{height:100%;width:0;background:linear-gradient(90deg,#5e4dcf,#a798ff);transition:width .15s}#exportStatus{display:block;margin-top:5px;text-align:center;font-family:"SF Mono","Cascadia Code","Fira Code",Consolas,monospace;font-size:9.5px;color:rgba(255,255,255,.32)}
-  @media (max-width:820px){#panel{max-height:min(46vh,310px);max-height:min(46dvh,310px);padding:10px 12px calc(10px + env(safe-area-inset-bottom))}#tabs{justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}.tab-btn{flex:0 0 auto;padding:8px 13px}.tab-panel.active{justify-content:flex-start;align-content:flex-start;gap:14px}.ctl{flex:1 1 calc(50% - 14px);min-width:138px;align-items:stretch}.ctl label,.ctl .v{text-align:center}input[type="range"]{width:100%;height:4px}input[type="range"]::-webkit-slider-thumb{width:18px;height:18px}input[type="range"]::-moz-range-thumb{width:18px;height:18px}}
+  @media (max-width:820px){#topExportBtn{top:10px;right:10px;padding:7px 10px;font-size:8px;letter-spacing:1px}#topExportBtn svg{width:12px;height:12px}#panel{max-height:min(46vh,310px);max-height:min(46dvh,310px);padding:10px 12px calc(10px + env(safe-area-inset-bottom))}#tabs{justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}.tab-btn{flex:0 0 auto;padding:8px 13px}.tab-panel.active{justify-content:flex-start;align-content:flex-start;gap:14px}.ctl{flex:1 1 calc(50% - 14px);min-width:138px;align-items:stretch}.ctl label,.ctl .v{text-align:center}input[type="range"]{width:100%;height:4px}input[type="range"]::-webkit-slider-thumb{width:18px;height:18px}input[type="range"]::-moz-range-thumb{width:18px;height:18px}}
   @media (max-width:380px){.ctl{flex-basis:100%}}
 </style>
 </head>
 <body>
+<button id="topExportBtn" type="button" data-tab="export" aria-label="Export loop">
+  <span>Export Loop</span>
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 3v11"></path>
+    <path d="M7 9l5 5 5-5"></path>
+    <path d="M5 20h14"></path>
+  </svg>
+</button>
 <div id="viewport">
   <div id="scene">
     <canvas id="starfield" width="3840" height="2160"></canvas>
@@ -65,7 +76,6 @@
     <button class="tab-btn" type="button" data-tab="png">PNG</button>
     <button class="tab-btn" type="button" data-tab="candle">Candle</button>
     <button class="tab-btn" type="button" data-tab="look">Look</button>
-    <button class="tab-btn" type="button" data-tab="export">Export</button>
   </div>
   <div class="tab-panel active" id="tab-stars">
     <div class="ctl"><label>Star Amount</label><input type="range" id="rCount" min="100" max="15000" value="250" step="50"><span class="v" id="vCount">250</span></div>
@@ -121,7 +131,9 @@
   function resize(){const vw=viewport.clientWidth,vh=viewport.clientHeight;let w=vw,h=w/AR;if(h>vh){h=vh;w=h*AR}scene.style.width=w+'px';scene.style.height=h+'px'}
   addEventListener('resize',updatePanelHeight);if('ResizeObserver'in window)new ResizeObserver(updatePanelHeight).observe(panel);
   const setPngSize=s=>{pngScale=s;root.style.setProperty('--png-scale',s)},setPngXcss=v=>root.style.setProperty('--png-x',v+'%'),setPngYcss=v=>root.style.setProperty('--png-y',v+'%'),setEdge=px=>{baseImg.style.filter=px>0?`blur(${px}px)`:'none'},setBloom=(sp,op)=>{glowImg.style.filter=`blur(${sp}px)`;glowImg.style.opacity=op};
-  document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',()=>{const tab=btn.dataset.tab;document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b===btn));document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id===`tab-${tab}`));requestAnimationFrame(updatePanelHeight)}));
+  function activateTab(btn){const tab=btn.dataset.tab;document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b===btn));document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id===`tab-${tab}`));requestAnimationFrame(updatePanelHeight)}
+  document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',()=>activateTab(btn)));
+  $('topExportBtn').addEventListener('click',()=>{document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='tab-export'));requestAnimationFrame(updatePanelHeight)});
   function wire(sid,rid,fmt,fn){const sl=$(sid),rd=$(rid);sl.addEventListener('input',()=>{const v=parseFloat(sl.value);rd.textContent=fmt(v);fn(v)})}
   wire('rCount','vCount',v=>v.toLocaleString(),v=>{starCount=v|0});wire('rStarSize','vStarSize',v=>v.toFixed(2)+'x',v=>{starSize=v});wire('rSpeed','vSpeed',v=>v.toFixed(1)+'x',v=>{tSpeed=v});wire('rPngSize','vPngSize',v=>Math.round(v*100)+'%',v=>setPngSize(v));wire('rPngX','vPngX',v=>v+'%',v=>{pngX=v;setPngXcss(v)});wire('rPngY','vPngY',v=>v+'%',v=>{pngY=v;setPngYcss(v)});wire('rCandleGlow','vCandleGlow',v=>v.toFixed(2),v=>{candleGlow=v});wire('rCandleFlicker','vCandleFlicker',v=>v.toFixed(2),v=>{candleFlicker=v});wire('rCandleSpeed','vCandleSpeed',v=>v.toFixed(2)+'x',v=>{candleSpeed=v});wire('rCandleSpread','vCandleSpread',v=>v+' px',v=>{candleSpread=v});wire('rCandleWarmth','vCandleWarmth',v=>v.toFixed(2)+'x',v=>{candleWarmth=v});wire('rCandleSpill','vCandleSpill',v=>v.toFixed(2),v=>{candleSpill=v});wire('rCandleMotion','vCandleMotion',v=>v.toFixed(2),v=>{candleMotion=v});wire('rGradient','vGradient',v=>v.toFixed(2)+'x',v=>{gradMult=v;setGradientBrightness(v)});wire('rEdge','vEdge',v=>v.toFixed(2)+' px',v=>{edgeBlur=v;setEdge(v)});wire('rBloom','vBloom',v=>v+' px',v=>{bloomSpread=v;setBloom(v,bloomOpacity)});wire('rOpac','vOpac',v=>v.toFixed(2),v=>{bloomOpacity=v;setBloom(bloomSpread,v)});
   starCount=parseInt($('rCount').value);starSize=parseFloat($('rStarSize').value);tSpeed=parseFloat($('rSpeed').value);candleGlow=parseFloat($('rCandleGlow').value);candleFlicker=parseFloat($('rCandleFlicker').value);candleSpeed=parseFloat($('rCandleSpeed').value);candleSpread=parseFloat($('rCandleSpread').value);candleWarmth=parseFloat($('rCandleWarmth').value);candleSpill=parseFloat($('rCandleSpill').value);candleMotion=parseFloat($('rCandleMotion').value);gradMult=parseFloat($('rGradient').value);edgeBlur=parseFloat($('rEdge').value);bloomSpread=parseFloat($('rBloom').value);bloomOpacity=parseFloat($('rOpac').value);setPngSize(parseFloat($('rPngSize').value));pngX=parseFloat($('rPngX').value);setPngXcss(pngX);pngY=parseFloat($('rPngY').value);setPngYcss(pngY);setGradientBrightness(gradMult);setEdge(edgeBlur);setBloom(bloomSpread,bloomOpacity);updatePanelHeight();
