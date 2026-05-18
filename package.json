@@ -1,0 +1,14 @@
+{
+  "name": "church-graphic",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GitHub Pages church evening graphic with browser and Node video export helpers.",
+  "scripts": {
+    "serve": "npx http-server . -p 8080",
+    "export": "node export-node.js"
+  },
+  "dependencies": {
+    "http-server": "^14.1.1",
+    "puppeteer": "^24.10.2"
+  }
+}
