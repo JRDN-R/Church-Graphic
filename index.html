@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>4K Starfield — 80s Bloom</title>
 <style>
+  :root {
+    --panel-h: 88px;
+    --png-scale: 1;
+  }
+
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
   html, body {
@@ -19,7 +24,8 @@
   /* ═══════════ Viewport ═══════════ */
   #viewport {
     width: 100%;
-    height: calc(100vh - 88px);
+    height: calc(100vh - var(--panel-h));
+    height: calc(100dvh - var(--panel-h));
     display: flex;
     justify-content: center;
     align-items: center;
@@ -46,32 +52,43 @@
     width: 100%; height: 100%;
     display: block;
     pointer-events: none;
+    transform: scale(var(--png-scale));
+    transform-origin: center center;
   }
   #baseLayer { z-index: 2; }
   #glowLayer {
     z-index: 3;
     mix-blend-mode: screen;       /* ← the 80s bloom compositing */
-    will-change: filter, opacity;
+    will-change: filter, opacity, transform;
   }
 
   /* ═══════════ Control Panel ═══════════ */
   #panel {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: 88px;
+    min-height: 88px;
+    max-height: min(44vh, 285px);
+    max-height: min(44dvh, 285px);
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
+    align-content: center;
     justify-content: center;
-    gap: 28px;
-    padding: 0 20px;
+    gap: 16px 24px;
+    padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
     background: rgba(6, 6, 16, 0.94);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid rgba(255, 255, 255, 0.04);
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     z-index: 1000;
   }
 
   .ctl {
+    flex: 0 1 128px;
+    min-width: 118px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -94,11 +111,12 @@
   /* ═══════════ Range Inputs ═══════════ */
   input[type="range"] {
     -webkit-appearance: none; appearance: none;
-    width: 120px; height: 3px;
+    width: 120px; max-width: 100%; height: 3px;
     border-radius: 3px;
     background: rgba(255, 255, 255, 0.07);
     outline: none;
     cursor: pointer;
+    touch-action: pan-y;
   }
   input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -133,6 +151,49 @@
     background: rgba(255, 255, 255, 0.045);
     flex-shrink: 0;
   }
+
+  @media (max-width: 820px) {
+    #panel {
+      justify-content: flex-start;
+      align-content: flex-start;
+      gap: 14px;
+      padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+    }
+
+    .ctl {
+      flex: 1 1 calc(50% - 14px);
+      min-width: 138px;
+      align-items: stretch;
+    }
+
+    .ctl label,
+    .ctl .v {
+      text-align: center;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      width: 18px;
+      height: 18px;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+    }
+
+    .sep { display: none; }
+  }
+
+  @media (max-width: 380px) {
+    .ctl {
+      flex-basis: 100%;
+    }
+  }
 </style>
 </head>
 <body>
@@ -163,6 +224,11 @@
     <span class="v" id="vCount">2,500</span>
   </div>
   <div class="ctl">
+    <label>Star Size</label>
+    <input type="range" id="rStarSize" min="0.25" max="5" value="1" step="0.05">
+    <span class="v" id="vStarSize">1.00×</span>
+  </div>
+  <div class="ctl">
     <label>Twinkle Speed</label>
     <input type="range" id="rSpeed" min="0.1" max="5" value="1" step="0.1">
     <span class="v" id="vSpeed">1.0×</span>
@@ -170,6 +236,11 @@
 
   <div class="sep"></div>
 
+  <div class="ctl">
+    <label>PNG Size</label>
+    <input type="range" id="rPngSize" min="0.5" max="2" value="1" step="0.01">
+    <span class="v" id="vPngSize">100%</span>
+  </div>
   <div class="ctl">
     <label>Base Edge Soften</label>
     <input type="range" id="rEdge" min="0" max="2" value="0.4" step="0.05">
@@ -201,6 +272,7 @@
   const $ = id => document.getElementById(id);
   const viewport = $('viewport'),
         scene    = $('scene'),
+        panel    = $('panel'),
         cvs      = $('starfield'),
         ctx      = cvs.getContext('2d'),
         baseImg  = $('baseLayer'),
@@ -209,8 +281,9 @@
   /* ════════════════════════════════════════════
            S T A R   F I E L D
      ════════════════════════════════════════════ */
-  let stars  = [];
-  let tSpeed = 1;                           // twinkle speed multiplier
+  let stars    = [];
+  let tSpeed   = 1;                         // twinkle speed multiplier
+  let starSize = 1;                         // star size multiplier
 
   /** Build one star with randomised properties */
   function createStar() {
@@ -257,7 +330,7 @@
       a = a < 0.02 ? 0.02 : a > 1 ? 1 : a;
 
       ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, 6.2832);
+      ctx.arc(s.x, s.y, s.r * starSize, 0, 6.2832);
       ctx.fillStyle = `rgba(${s.cr},${s.cg},${s.cb},${a})`;
       ctx.fill();
     }
@@ -267,6 +340,12 @@
   /* ════════════════════════════════════════════
          R E S P O N S I V E   1 6 : 9
      ════════════════════════════════════════════ */
+  function updatePanelHeight() {
+    const h = Math.ceil(panel.getBoundingClientRect().height);
+    document.documentElement.style.setProperty('--panel-h', h + 'px');
+    resize();
+  }
+
   function resize() {
     const vw = viewport.clientWidth, vh = viewport.clientHeight;
     let w = vw, h = w / AR;
@@ -274,12 +353,18 @@
     scene.style.width  = w + 'px';
     scene.style.height = h + 'px';
   }
-  addEventListener('resize', resize);
-  resize();
+
+  addEventListener('resize', updatePanelHeight);
+  if ('ResizeObserver' in window) {
+    new ResizeObserver(updatePanelHeight).observe(panel);
+  }
 
   /* ════════════════════════════════════════════
          I M A G E   C O M P O S I T I N G
      ════════════════════════════════════════════ */
+  const setPngSize = scale => {
+    document.documentElement.style.setProperty('--png-scale', scale);
+  };
   const setEdge = px => {
     baseImg.style.filter = px > 0 ? `blur(${px}px)` : 'none';
   };
@@ -304,9 +389,17 @@
        v => v.toLocaleString(),
        v => syncCount(v | 0));
 
+  wire('rStarSize', 'vStarSize',
+       v => v.toFixed(2) + '×',
+       v => { starSize = v; });
+
   wire('rSpeed', 'vSpeed',
        v => v.toFixed(1) + '×',
        v => { tSpeed = v; });
+
+  wire('rPngSize', 'vPngSize',
+       v => Math.round(v * 100) + '%',
+       v => setPngSize(v));
 
   wire('rEdge', 'vEdge',
        v => v.toFixed(2) + ' px',
@@ -324,8 +417,11 @@
          I N I T I A L I S E
      ════════════════════════════════════════════ */
   syncCount(parseInt($('rCount').value));
+  starSize = parseFloat($('rStarSize').value);
+  setPngSize(parseFloat($('rPngSize').value));
   setEdge(parseFloat($('rEdge').value));
   setBloom(parseFloat($('rBloom').value), parseFloat($('rOpac').value));
+  updatePanelHeight();
   requestAnimationFrame(frame);
 })();
 </script>
