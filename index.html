@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>4K Starfield — 80s Bloom</title>
+<title>4K Starfield - Candle Glow</title>
 <style>
   :root {
     --panel-h: 112px;
@@ -24,7 +24,6 @@
     user-select: none;
   }
 
-  /* ═══════════ Viewport ═══════════ */
   #viewport {
     width: 100%;
     height: calc(100vh - var(--panel-h));
@@ -35,21 +34,20 @@
     background: #000;
   }
 
-  /* 16:9 Scene — dimensions set by JS */
   #scene {
     position: relative;
     overflow: hidden;
     background: #000;
-    line-height: 0;               /* kill inline-img gap */
+    line-height: 0;
   }
 
-  #starfield {                    /* 4K internal, CSS-scaled */
+  #starfield {
     display: block;
     width: 100%; height: 100%;
   }
 
-  /* ═══════════ Dual/Triple-Layer Overlay ═══════════ */
-  .overlay-img {
+  .overlay-img,
+  #fireglow {
     position: absolute;
     top: 0; left: 0;
     width: 100%; height: 100%;
@@ -59,11 +57,14 @@
     transform-origin: center center;
     will-change: filter, opacity, transform;
   }
+
   #baseLayer { z-index: 2; }
+
   #glowLayer {
     z-index: 3;
-    mix-blend-mode: screen;       /* ← the 80s bloom compositing */
+    mix-blend-mode: screen;
   }
+
   #candleLayer {
     z-index: 4;
     mix-blend-mode: screen;
@@ -71,7 +72,12 @@
     transform: translate(var(--png-x), var(--png-y)) scale(var(--candle-scale));
   }
 
-  /* ═══════════ Control Panel ═══════════ */
+  #fireglow {
+    z-index: 5;
+    mix-blend-mode: screen;
+    opacity: 1;
+  }
+
   #panel {
     position: fixed;
     bottom: 0; left: 0; right: 0;
@@ -130,9 +136,7 @@
     flex-wrap: wrap;
   }
 
-  .tab-panel.active {
-    display: flex;
-  }
+  .tab-panel.active { display: flex; }
 
   .ctl {
     flex: 0 1 132px;
@@ -142,6 +146,7 @@
     align-items: center;
     gap: 6px;
   }
+
   .ctl label {
     font-size: 8.5px;
     font-weight: 700;
@@ -150,13 +155,13 @@
     color: rgba(255, 255, 255, 0.30);
     white-space: nowrap;
   }
+
   .ctl .v {
     font-family: "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
     font-size: 9px;
     color: rgba(255, 255, 255, 0.22);
   }
 
-  /* ═══════════ Range Inputs ═══════════ */
   input[type="range"] {
     -webkit-appearance: none; appearance: none;
     width: 124px; max-width: 100%; height: 3px;
@@ -166,20 +171,21 @@
     cursor: pointer;
     touch-action: pan-y;
   }
+
   input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 14px; height: 14px;
     border-radius: 50%;
     background: radial-gradient(circle at 38% 32%, #a798ff, #5e4dcf);
-    box-shadow: 0 0 10px rgba(110, 90, 255, 0.45),
-                0 0 3px  rgba(110, 90, 255, 0.3);
+    box-shadow: 0 0 10px rgba(110, 90, 255, 0.45), 0 0 3px rgba(110, 90, 255, 0.3);
     cursor: pointer;
     transition: box-shadow 0.2s;
   }
+
   input[type="range"]::-webkit-slider-thumb:hover {
-    box-shadow: 0 0 18px rgba(110, 90, 255, 0.8),
-                0 0 5px  rgba(110, 90, 255, 0.5);
+    box-shadow: 0 0 18px rgba(110, 90, 255, 0.8), 0 0 5px rgba(110, 90, 255, 0.5);
   }
+
   input[type="range"]::-moz-range-thumb {
     width: 14px; height: 14px; border: none;
     border-radius: 50%;
@@ -187,6 +193,7 @@
     box-shadow: 0 0 10px rgba(110, 90, 255, 0.45);
     cursor: pointer;
   }
+
   input[type="range"]::-moz-range-track {
     height: 3px;
     border-radius: 3px;
@@ -227,9 +234,7 @@
     }
 
     .ctl label,
-    .ctl .v {
-      text-align: center;
-    }
+    .ctl .v { text-align: center; }
 
     input[type="range"] {
       width: 100%;
@@ -248,38 +253,32 @@
   }
 
   @media (max-width: 380px) {
-    .ctl {
-      flex-basis: 100%;
-    }
+    .ctl { flex-basis: 100%; }
   }
 </style>
 </head>
 <body>
 
-<!-- ══════════════════ SCENE ══════════════════ -->
 <div id="viewport">
   <div id="scene">
-    <!-- 4K Canvas: internal 3840×2160, visually scaled by CSS -->
     <canvas id="starfield" width="3840" height="2160"></canvas>
 
-    <!-- Layer 1 — Base (crisp image, optional micro-blur edge soften) -->
     <img id="baseLayer" class="overlay-img"
          src="https://raw.githubusercontent.com/JRDN-R/Church-Graphic/main/darkskysteeple.png"
          alt="" draggable="false">
 
-    <!-- Layer 2 — Broad 80s bloom -->
     <img id="glowLayer" class="overlay-img"
          src="https://raw.githubusercontent.com/JRDN-R/Church-Graphic/main/darkskysteeple.png"
          alt="" draggable="false">
 
-    <!-- Layer 3 — Warm candle/fire breathing glow -->
     <img id="candleLayer" class="overlay-img"
          src="https://raw.githubusercontent.com/JRDN-R/Church-Graphic/main/darkskysteeple.png"
          alt="" draggable="false">
+
+    <canvas id="fireglow" width="3840" height="2160"></canvas>
   </div>
 </div>
 
-<!-- ══════════════════ CONTROLS ══════════════════ -->
 <div id="panel">
   <div id="tabs" role="tablist" aria-label="Scene controls">
     <button class="tab-btn active" type="button" data-tab="stars">Stars</button>
@@ -297,12 +296,12 @@
     <div class="ctl">
       <label>Star Size</label>
       <input type="range" id="rStarSize" min="0.25" max="5" value="1" step="0.05">
-      <span class="v" id="vStarSize">1.00×</span>
+      <span class="v" id="vStarSize">1.00x</span>
     </div>
     <div class="ctl">
       <label>Twinkle Speed</label>
       <input type="range" id="rSpeed" min="0.1" max="5" value="1" step="0.1">
-      <span class="v" id="vSpeed">1.0×</span>
+      <span class="v" id="vSpeed">1.0x</span>
     </div>
   </div>
 
@@ -326,29 +325,34 @@
 
   <div class="tab-panel" id="tab-candle">
     <div class="ctl">
-      <label>Candle Glow</label>
-      <input type="range" id="rCandleGlow" min="0" max="1" value="0.34" step="0.01">
-      <span class="v" id="vCandleGlow">0.34</span>
+      <label>Window Glow</label>
+      <input type="range" id="rCandleGlow" min="0" max="1.4" value="0.58" step="0.01">
+      <span class="v" id="vCandleGlow">0.58</span>
     </div>
     <div class="ctl">
       <label>Flicker Amount</label>
-      <input type="range" id="rCandleFlicker" min="0" max="0.6" value="0.14" step="0.01">
-      <span class="v" id="vCandleFlicker">0.14</span>
+      <input type="range" id="rCandleFlicker" min="0" max="0.8" value="0.26" step="0.01">
+      <span class="v" id="vCandleFlicker">0.26</span>
     </div>
     <div class="ctl">
       <label>Flicker Speed</label>
-      <input type="range" id="rCandleSpeed" min="0.05" max="3" value="0.75" step="0.05">
-      <span class="v" id="vCandleSpeed">0.75×</span>
+      <input type="range" id="rCandleSpeed" min="0.05" max="4" value="0.95" step="0.05">
+      <span class="v" id="vCandleSpeed">0.95x</span>
     </div>
     <div class="ctl">
       <label>Light Spread</label>
-      <input type="range" id="rCandleSpread" min="0" max="100" value="36" step="1">
-      <span class="v" id="vCandleSpread">36 px</span>
+      <input type="range" id="rCandleSpread" min="0" max="120" value="44" step="1">
+      <span class="v" id="vCandleSpread">44 px</span>
     </div>
     <div class="ctl">
       <label>Warmth</label>
-      <input type="range" id="rCandleWarmth" min="0" max="2" value="1.15" step="0.05">
-      <span class="v" id="vCandleWarmth">1.15×</span>
+      <input type="range" id="rCandleWarmth" min="0" max="2" value="1.25" step="0.05">
+      <span class="v" id="vCandleWarmth">1.25x</span>
+    </div>
+    <div class="ctl">
+      <label>Spill to Trees</label>
+      <input type="range" id="rCandleSpill" min="0" max="1.5" value="0.55" step="0.01">
+      <span class="v" id="vCandleSpill">0.55</span>
     </div>
     <div class="ctl">
       <label>Breathing Motion</label>
@@ -361,7 +365,7 @@
     <div class="ctl">
       <label>Gradient Brightness</label>
       <input type="range" id="rGradient" min="0" max="3" value="1" step="0.01">
-      <span class="v" id="vGradient">1.00×</span>
+      <span class="v" id="vGradient">1.00x</span>
     </div>
     <div class="ctl">
       <label>Base Edge Soften</label>
@@ -381,17 +385,9 @@
   </div>
 </div>
 
-<!-- ══════════════════ ENGINE ══════════════════ -->
 <script>
 (() => {
-  /* ────────────────────────────────────
-     Constants
-     ──────────────────────────────────── */
   const W = 3840, H = 2160, AR = W / H;
-
-  /* ────────────────────────────────────
-     DOM Refs
-     ──────────────────────────────────── */
   const $ = id => document.getElementById(id);
   const root      = document.documentElement,
         viewport  = $('viewport'),
@@ -399,64 +395,60 @@
         panel     = $('panel'),
         cvs       = $('starfield'),
         ctx       = cvs.getContext('2d'),
+        fireCvs   = $('fireglow'),
+        fireCtx   = fireCvs.getContext('2d'),
         baseImg   = $('baseLayer'),
         glowImg   = $('glowLayer'),
         candleImg = $('candleLayer');
 
-  /* ════════════════════════════════════════════
-           S T A R   F I E L D
-     ════════════════════════════════════════════ */
-  let stars      = [];
-  let tSpeed     = 1;                       // twinkle speed multiplier
-  let starSize   = 1;                       // star size multiplier
-  let sky        = null;
+  let stars = [];
+  let tSpeed = 1;
+  let starSize = 1;
+  let sky = null;
 
-  /* ════════════════════════════════════════════
-           C A N D L E   G L O W
-     ════════════════════════════════════════════ */
-  let pngScale      = 1;
-  let candleGlow    = 0.34;
-  let candleFlicker = 0.14;
-  let candleSpeed   = 0.75;
-  let candleSpread  = 36;
-  let candleWarmth  = 1.15;
-  let candleMotion  = 0.30;
+  let pngScale = 1;
+  let candleGlow = 0.58;
+  let candleFlicker = 0.26;
+  let candleSpeed = 0.95;
+  let candleSpread = 44;
+  let candleWarmth = 1.25;
+  let candleMotion = 0.30;
+  let candleSpill = 0.55;
 
-  /** Build one star with randomised properties */
+  const fireHotspots = [
+    { cx: 0.331, cy: 0.657, rx: 0.035, ry: 0.122, a: 1.00, spill: false, phase: 0.10 },
+    { cx: 0.392, cy: 0.650, rx: 0.052, ry: 0.135, a: 1.08, spill: false, phase: 1.25 },
+    { cx: 0.363, cy: 0.657, rx: 0.130, ry: 0.190, a: 0.42, spill: false, phase: 2.00 },
+    { cx: 0.368, cy: 0.540, rx: 0.105, ry: 0.080, a: 0.20, spill: true,  phase: 0.70 },
+    { cx: 0.352, cy: 0.770, rx: 0.195, ry: 0.120, a: 0.22, spill: true,  phase: 2.60 },
+    { cx: 0.470, cy: 0.800, rx: 0.240, ry: 0.095, a: 0.16, spill: true,  phase: 1.70 },
+    { cx: 0.235, cy: 0.835, rx: 0.255, ry: 0.150, a: 0.13, spill: true,  phase: 3.20 },
+    { cx: 0.695, cy: 0.835, rx: 0.315, ry: 0.145, a: 0.09, spill: true,  phase: 4.00 }
+  ];
+
   function createStar() {
     return {
-      x:     Math.random() * W,
-      y:     Math.random() * H,
-      r:     0.3  + Math.random() * 1.8,    // radius  0.3 – 2.1 px @4K
-      base:  0.18 + Math.random() * 0.62,   // resting alpha
-      phase: Math.random() * 6.2832,        // 0 – 2π  random start
-      freq:  0.20 + Math.random() * 1.3,    // personal speed factor
-      /* White-to-slightly-blue palette */
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: 0.3 + Math.random() * 1.8,
+      base: 0.18 + Math.random() * 0.62,
+      phase: Math.random() * 6.2832,
+      freq: 0.20 + Math.random() * 1.3,
       cr: 212 + (Math.random() * 43) | 0,
       cg: 220 + (Math.random() * 35) | 0,
       cb: 240 + (Math.random() * 15) | 0
     };
   }
 
-  /** Grow or shrink the pool to exactly n stars */
   function syncCount(n) {
     while (stars.length < n) stars.push(createStar());
-    if    (stars.length > n) stars.length = n;
+    if (stars.length > n) stars.length = n;
   }
 
-  function clampByte(v) {
-    return Math.max(0, Math.min(255, Math.round(v)));
-  }
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+  function clampByte(v) { return clamp(Math.round(v), 0, 255); }
+  function rgb(r, g, b) { return `rgb(${clampByte(r)}, ${clampByte(g)}, ${clampByte(b)})`; }
 
-  function rgb(r, g, b) {
-    return `rgb(${clampByte(r)}, ${clampByte(g)}, ${clampByte(b)})`;
-  }
-
-  function clamp(v, min, max) {
-    return Math.max(min, Math.min(max, v));
-  }
-
-  /* ── Rebuild sky gradient when brightness changes ── */
   function setGradientBrightness(mult) {
     sky = ctx.createLinearGradient(0, 0, 0, H);
     sky.addColorStop(0.00, '#000000');
@@ -465,55 +457,104 @@
     sky.addColorStop(1.00, rgb(10 * mult, 10 * mult, 26 * mult));
   }
 
-  function updateCandle(t) {
+  function rgba(r, g, b, a) {
+    return `rgba(${clampByte(r)}, ${clampByte(g)}, ${clampByte(b)}, ${clamp(a, 0, 1).toFixed(4)})`;
+  }
+
+  function drawEllipseGlow(cxPct, cyPct, rxPct, ryPct, alpha, warmth, spreadMult) {
+    if (alpha <= 0 || spreadMult <= 0) return;
+
+    const cx = cxPct * W;
+    const cy = cyPct * H;
+    const rx = Math.max(1, rxPct * W * spreadMult);
+    const ry = Math.max(1, ryPct * H * spreadMult);
+
+    const hotR = 255;
+    const hotG = 215 + warmth * 10;
+    const hotB = 118 - warmth * 24;
+    const midR = 255;
+    const midG = 150 + warmth * 14;
+    const midB = 45 - warmth * 10;
+    const lowR = 255;
+    const lowG = 85 + warmth * 8;
+    const lowB = 18;
+
+    fireCtx.save();
+    fireCtx.translate(cx, cy);
+    fireCtx.scale(rx, ry);
+
+    const g = fireCtx.createRadialGradient(0, 0, 0.02, 0, 0, 1);
+    g.addColorStop(0.00, rgba(hotR, hotG, hotB, alpha * 0.88));
+    g.addColorStop(0.20, rgba(255, 190, 82, alpha * 0.68));
+    g.addColorStop(0.45, rgba(midR, midG, midB, alpha * 0.32));
+    g.addColorStop(0.72, rgba(lowR, lowG, lowB, alpha * 0.12));
+    g.addColorStop(1.00, rgba(255, 80, 0, 0));
+
+    fireCtx.fillStyle = g;
+    fireCtx.beginPath();
+    fireCtx.arc(0, 0, 1, 0, Math.PI * 2);
+    fireCtx.fill();
+    fireCtx.restore();
+  }
+
+  function updateFire(t) {
     const T = t * 0.001 * candleSpeed;
     const wave = (Math.sin(T * 5.10) * 0.48) +
                  (Math.sin(T * 9.70 + 1.60) * 0.31) +
                  (Math.sin(T * 16.90 + 0.35) * 0.21);
-    const breathe = clamp(1 + candleFlicker * wave, 0.72, 1.34);
-    const opacity = clamp(candleGlow * breathe, 0, 1);
-    const spread  = Math.max(0, candleSpread * (1 + (breathe - 1) * candleMotion * 0.55));
-    const scale   = pngScale * (1 + (breathe - 1) * candleMotion * 0.018);
-    const warmth  = candleWarmth;
+    const breathe = clamp(1 + candleFlicker * wave, 0.70, 1.38);
+    const spreadMult = candleSpread / 44;
+    const motionScale = 1 + (breathe - 1) * candleMotion * 0.018;
+    const broadLayerOpacity = clamp(candleGlow * 0.16 * breathe, 0, 0.32);
 
-    root.style.setProperty('--candle-scale', scale.toFixed(4));
-    candleImg.style.opacity = opacity.toFixed(3);
+    fireCtx.clearRect(0, 0, W, H);
+    fireCtx.globalCompositeOperation = 'lighter';
+
+    for (const h of fireHotspots) {
+      const local = 1 + candleFlicker * (
+        Math.sin(T * 4.2 + h.phase) * 0.42 +
+        Math.sin(T * 11.8 + h.phase * 1.7) * 0.24
+      );
+      const spillMult = h.spill ? candleSpill : 1;
+      const driftX = Math.sin(T * 2.6 + h.phase) * 0.0018 * candleMotion;
+      const driftY = Math.cos(T * 2.1 + h.phase) * 0.0014 * candleMotion;
+      const alpha = h.a * candleGlow * spillMult * local;
+      drawEllipseGlow(h.cx + driftX, h.cy + driftY, h.rx, h.ry, alpha, candleWarmth, spreadMult * motionScale);
+    }
+
+    fireCtx.globalCompositeOperation = 'source-over';
+
+    root.style.setProperty('--candle-scale', (pngScale * motionScale).toFixed(4));
+    candleImg.style.opacity = broadLayerOpacity.toFixed(3);
     candleImg.style.filter =
-      `blur(${spread.toFixed(1)}px) ` +
-      `brightness(${(1.06 + warmth * 0.18).toFixed(2)}) ` +
-      `contrast(${(1.02 + warmth * 0.06).toFixed(2)}) ` +
-      `saturate(${(1.18 + warmth * 0.82).toFixed(2)}) ` +
-      `sepia(${(0.10 + warmth * 0.20).toFixed(2)})`;
+      `blur(${Math.max(0, candleSpread * 0.65).toFixed(1)}px) ` +
+      `brightness(${(1.02 + candleWarmth * 0.10).toFixed(2)}) ` +
+      `saturate(${(1.10 + candleWarmth * 0.45).toFixed(2)}) ` +
+      `sepia(${(0.08 + candleWarmth * 0.12).toFixed(2)})`;
   }
 
-  /* ── Render one frame ── */
   function frame(t) {
-    /* Sky */
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, W, H);
 
-    /* Stars — dual-wave organic twinkle */
     const T = t * 0.001 * tSpeed;
     for (let i = 0, n = stars.length; i < n; i++) {
-      const s  = stars[i];
-      const w1 = Math.sin(T * s.freq + s.phase)                * 0.30;
-      const w2 = Math.sin(T * s.freq * 0.37 + s.phase * 1.73)  * 0.12;
-      let   a  = s.base + w1 + w2;
+      const s = stars[i];
+      const w1 = Math.sin(T * s.freq + s.phase) * 0.30;
+      const w2 = Math.sin(T * s.freq * 0.37 + s.phase * 1.73) * 0.12;
+      let a = s.base + w1 + w2;
       a = a < 0.02 ? 0.02 : a > 1 ? 1 : a;
 
       ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r * starSize, 0, 6.2832);
+      ctx.arc(s.x, s.y, s.r * starSize, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(${s.cr},${s.cg},${s.cb},${a})`;
       ctx.fill();
     }
 
-    updateCandle(t);
+    updateFire(t);
     requestAnimationFrame(frame);
   }
 
-  /* ════════════════════════════════════════════
-         R E S P O N S I V E   1 6 : 9
-     ════════════════════════════════════════════ */
   function updatePanelHeight() {
     const h = Math.ceil(panel.getBoundingClientRect().height);
     root.style.setProperty('--panel-h', h + 'px');
@@ -524,39 +565,22 @@
     const vw = viewport.clientWidth, vh = viewport.clientHeight;
     let w = vw, h = w / AR;
     if (h > vh) { h = vh; w = h * AR; }
-    scene.style.width  = w + 'px';
+    scene.style.width = w + 'px';
     scene.style.height = h + 'px';
   }
 
   addEventListener('resize', updatePanelHeight);
-  if ('ResizeObserver' in window) {
-    new ResizeObserver(updatePanelHeight).observe(panel);
-  }
+  if ('ResizeObserver' in window) new ResizeObserver(updatePanelHeight).observe(panel);
 
-  /* ════════════════════════════════════════════
-         I M A G E   C O M P O S I T I N G
-     ════════════════════════════════════════════ */
-  const setPngSize = scale => {
-    pngScale = scale;
-    root.style.setProperty('--png-scale', scale);
-  };
-  const setPngX = value => {
-    root.style.setProperty('--png-x', value + '%');
-  };
-  const setPngY = value => {
-    root.style.setProperty('--png-y', value + '%');
-  };
-  const setEdge = px => {
-    baseImg.style.filter = px > 0 ? `blur(${px}px)` : 'none';
-  };
+  const setPngSize = scale => { pngScale = scale; root.style.setProperty('--png-scale', scale); };
+  const setPngX = value => root.style.setProperty('--png-x', value + '%');
+  const setPngY = value => root.style.setProperty('--png-y', value + '%');
+  const setEdge = px => { baseImg.style.filter = px > 0 ? `blur(${px}px)` : 'none'; };
   const setBloom = (spread, opacity) => {
-    glowImg.style.filter  = `blur(${spread}px)`;
+    glowImg.style.filter = `blur(${spread}px)`;
     glowImg.style.opacity = opacity;
   };
 
-  /* ════════════════════════════════════════════
-         T A B S
-     ════════════════════════════════════════════ */
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const tab = btn.dataset.tab;
@@ -566,9 +590,6 @@
     });
   });
 
-  /* ════════════════════════════════════════════
-         C O N T R O L   W I R I N G
-     ════════════════════════════════════════════ */
   function wire(sliderId, readoutId, fmt, fn) {
     const sl = $(sliderId), rd = $(readoutId);
     sl.addEventListener('input', () => {
@@ -578,81 +599,33 @@
     });
   }
 
-  wire('rCount', 'vCount',
-       v => v.toLocaleString(),
-       v => syncCount(v | 0));
+  wire('rCount', 'vCount', v => v.toLocaleString(), v => syncCount(v | 0));
+  wire('rStarSize', 'vStarSize', v => v.toFixed(2) + 'x', v => { starSize = v; });
+  wire('rSpeed', 'vSpeed', v => v.toFixed(1) + 'x', v => { tSpeed = v; });
+  wire('rPngSize', 'vPngSize', v => Math.round(v * 100) + '%', v => setPngSize(v));
+  wire('rPngX', 'vPngX', v => v + '%', v => setPngX(v));
+  wire('rPngY', 'vPngY', v => v + '%', v => setPngY(v));
+  wire('rCandleGlow', 'vCandleGlow', v => v.toFixed(2), v => { candleGlow = v; });
+  wire('rCandleFlicker', 'vCandleFlicker', v => v.toFixed(2), v => { candleFlicker = v; });
+  wire('rCandleSpeed', 'vCandleSpeed', v => v.toFixed(2) + 'x', v => { candleSpeed = v; });
+  wire('rCandleSpread', 'vCandleSpread', v => v + ' px', v => { candleSpread = v; });
+  wire('rCandleWarmth', 'vCandleWarmth', v => v.toFixed(2) + 'x', v => { candleWarmth = v; });
+  wire('rCandleSpill', 'vCandleSpill', v => v.toFixed(2), v => { candleSpill = v; });
+  wire('rCandleMotion', 'vCandleMotion', v => v.toFixed(2), v => { candleMotion = v; });
+  wire('rGradient', 'vGradient', v => v.toFixed(2) + 'x', v => setGradientBrightness(v));
+  wire('rEdge', 'vEdge', v => v.toFixed(2) + ' px', v => setEdge(v));
+  wire('rBloom', 'vBloom', v => v + ' px', v => setBloom(v, parseFloat($('rOpac').value)));
+  wire('rOpac', 'vOpac', v => v.toFixed(2), v => setBloom(parseFloat($('rBloom').value), v));
 
-  wire('rStarSize', 'vStarSize',
-       v => v.toFixed(2) + '×',
-       v => { starSize = v; });
-
-  wire('rSpeed', 'vSpeed',
-       v => v.toFixed(1) + '×',
-       v => { tSpeed = v; });
-
-  wire('rPngSize', 'vPngSize',
-       v => Math.round(v * 100) + '%',
-       v => setPngSize(v));
-
-  wire('rPngX', 'vPngX',
-       v => v + '%',
-       v => setPngX(v));
-
-  wire('rPngY', 'vPngY',
-       v => v + '%',
-       v => setPngY(v));
-
-  wire('rCandleGlow', 'vCandleGlow',
-       v => v.toFixed(2),
-       v => { candleGlow = v; });
-
-  wire('rCandleFlicker', 'vCandleFlicker',
-       v => v.toFixed(2),
-       v => { candleFlicker = v; });
-
-  wire('rCandleSpeed', 'vCandleSpeed',
-       v => v.toFixed(2) + '×',
-       v => { candleSpeed = v; });
-
-  wire('rCandleSpread', 'vCandleSpread',
-       v => v + ' px',
-       v => { candleSpread = v; });
-
-  wire('rCandleWarmth', 'vCandleWarmth',
-       v => v.toFixed(2) + '×',
-       v => { candleWarmth = v; });
-
-  wire('rCandleMotion', 'vCandleMotion',
-       v => v.toFixed(2),
-       v => { candleMotion = v; });
-
-  wire('rGradient', 'vGradient',
-       v => v.toFixed(2) + '×',
-       v => setGradientBrightness(v));
-
-  wire('rEdge', 'vEdge',
-       v => v.toFixed(2) + ' px',
-       v => setEdge(v));
-
-  wire('rBloom', 'vBloom',
-       v => v + ' px',
-       v => setBloom(v, parseFloat($('rOpac').value)));
-
-  wire('rOpac', 'vOpac',
-       v => v.toFixed(2),
-       v => setBloom(parseFloat($('rBloom').value), v));
-
-  /* ════════════════════════════════════════════
-         I N I T I A L I S E
-     ════════════════════════════════════════════ */
   syncCount(parseInt($('rCount').value));
-  starSize      = parseFloat($('rStarSize').value);
-  candleGlow    = parseFloat($('rCandleGlow').value);
+  starSize = parseFloat($('rStarSize').value);
+  candleGlow = parseFloat($('rCandleGlow').value);
   candleFlicker = parseFloat($('rCandleFlicker').value);
-  candleSpeed   = parseFloat($('rCandleSpeed').value);
-  candleSpread  = parseFloat($('rCandleSpread').value);
-  candleWarmth  = parseFloat($('rCandleWarmth').value);
-  candleMotion  = parseFloat($('rCandleMotion').value);
+  candleSpeed = parseFloat($('rCandleSpeed').value);
+  candleSpread = parseFloat($('rCandleSpread').value);
+  candleWarmth = parseFloat($('rCandleWarmth').value);
+  candleSpill = parseFloat($('rCandleSpill').value);
+  candleMotion = parseFloat($('rCandleMotion').value);
   setPngSize(parseFloat($('rPngSize').value));
   setPngX(parseFloat($('rPngX').value));
   setPngY(parseFloat($('rPngY').value));
