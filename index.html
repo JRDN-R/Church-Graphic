@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4K Starfield — 80s Bloom</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: #000;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* ═══════════ Viewport ═══════════ */
+  #viewport {
+    width: 100%;
+    height: calc(100vh - 88px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+  }
+
+  /* 16:9 Scene — dimensions set by JS */
+  #scene {
+    position: relative;
+    overflow: hidden;
+    background: #000;
+    line-height: 0;               /* kill inline-img gap */
+  }
+
+  #starfield {                    /* 4K internal, CSS-scaled */
+    display: block;
+    width: 100%; height: 100%;
+  }
+
+  /* ═══════════ Dual-Layer Overlay ═══════════ */
+  .overlay-img {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: block;
+    pointer-events: none;
+  }
+  #baseLayer { z-index: 2; }
+  #glowLayer {
+    z-index: 3;
+    mix-blend-mode: screen;       /* ← the 80s bloom compositing */
+    will-change: filter, opacity;
+  }
+
+  /* ═══════════ Control Panel ═══════════ */
+  #panel {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 88px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    padding: 0 20px;
+    background: rgba(6, 6, 16, 0.94);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    z-index: 1000;
+  }
+
+  .ctl {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .ctl label {
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.30);
+    white-space: nowrap;
+  }
+  .ctl .v {
+    font-family: "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.22);
+  }
+
+  /* ═══════════ Range Inputs ═══════════ */
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 120px; height: 3px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.07);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 32%, #a798ff, #5e4dcf);
+    box-shadow: 0 0 10px rgba(110, 90, 255, 0.45),
+                0 0 3px  rgba(110, 90, 255, 0.3);
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 18px rgba(110, 90, 255, 0.8),
+                0 0 5px  rgba(110, 90, 255, 0.5);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px; border: none;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 32%, #a798ff, #5e4dcf);
+    box-shadow: 0 0 10px rgba(110, 90, 255, 0.45);
+    cursor: pointer;
+  }
+  input[type="range"]::-moz-range-track {
+    height: 3px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.07);
+    border: none;
+  }
+
+  .sep {
+    width: 1px; height: 48px;
+    background: rgba(255, 255, 255, 0.045);
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ SCENE ══════════════════ -->
+<div id="viewport">
+  <div id="scene">
+    <!-- 4K Canvas: internal 3840×2160, visually scaled by CSS -->
+    <canvas id="starfield" width="3840" height="2160"></canvas>
+
+    <!-- Layer 1 — Base (crisp image, optional micro-blur edge soften) -->
+    <img id="baseLayer" class="overlay-img"
+         src="https://raw.githubusercontent.com/JRDN-R/Church-Graphic/main/darkskysteeple.png"
+         alt="" draggable="false">
+
+    <!-- Layer 2 — Glow (heavy blur + screen blend = 80s halation) -->
+    <img id="glowLayer" class="overlay-img"
+         src="https://raw.githubusercontent.com/JRDN-R/Church-Graphic/main/darkskysteeple.png"
+         alt="" draggable="false">
+  </div>
+</div>
+
+<!-- ══════════════════ CONTROLS ══════════════════ -->
+<div id="panel">
+  <div class="ctl">
+    <label>Star Amount</label>
+    <input type="range" id="rCount" min="100" max="15000" value="2500" step="50">
+    <span class="v" id="vCount">2,500</span>
+  </div>
+  <div class="ctl">
+    <label>Twinkle Speed</label>
+    <input type="range" id="rSpeed" min="0.1" max="5" value="1" step="0.1">
+    <span class="v" id="vSpeed">1.0×</span>
+  </div>
+
+  <div class="sep"></div>
+
+  <div class="ctl">
+    <label>Base Edge Soften</label>
+    <input type="range" id="rEdge" min="0" max="2" value="0.4" step="0.05">
+    <span class="v" id="vEdge">0.40 px</span>
+  </div>
+  <div class="ctl">
+    <label>80s Bloom Spread</label>
+    <input type="range" id="rBloom" min="0" max="80" value="28" step="1">
+    <span class="v" id="vBloom">28 px</span>
+  </div>
+  <div class="ctl">
+    <label>80s Bloom Opacity</label>
+    <input type="range" id="rOpac" min="0" max="1" value="0.55" step="0.01">
+    <span class="v" id="vOpac">0.55</span>
+  </div>
+</div>
+
+<!-- ══════════════════ ENGINE ══════════════════ -->
+<script>
+(() => {
+  /* ────────────────────────────────────
+     Constants
+     ──────────────────────────────────── */
+  const W = 3840, H = 2160, AR = W / H;
+
+  /* ────────────────────────────────────
+     DOM Refs
+     ──────────────────────────────────── */
+  const $ = id => document.getElementById(id);
+  const viewport = $('viewport'),
+        scene    = $('scene'),
+        cvs      = $('starfield'),
+        ctx      = cvs.getContext('2d'),
+        baseImg  = $('baseLayer'),
+        glowImg  = $('glowLayer');
+
+  /* ════════════════════════════════════════════
+           S T A R   F I E L D
+     ════════════════════════════════════════════ */
+  let stars  = [];
+  let tSpeed = 1;                           // twinkle speed multiplier
+
+  /** Build one star with randomised properties */
+  function createStar() {
+    return {
+      x:     Math.random() * W,
+      y:     Math.random() * H,
+      r:     0.3  + Math.random() * 1.8,    // radius  0.3 – 2.1 px @4K
+      base:  0.18 + Math.random() * 0.62,   // resting alpha
+      phase: Math.random() * 6.2832,        // 0 – 2π  random start
+      freq:  0.20 + Math.random() * 1.3,    // personal speed factor
+      /* White-to-slightly-blue palette */
+      cr: 212 + (Math.random() * 43) | 0,
+      cg: 220 + (Math.random() * 35) | 0,
+      cb: 240 + (Math.random() * 15) | 0
+    };
+  }
+
+  /** Grow or shrink the pool to exactly n stars */
+  function syncCount(n) {
+    while (stars.length < n) stars.push(createStar());
+    if    (stars.length > n) stars.length = n;
+  }
+
+  /* ── Pre-build the sky gradient once ── */
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0.00, '#000000');       // pitch black top
+  sky.addColorStop(0.50, '#010108');
+  sky.addColorStop(0.78, '#04040d');
+  sky.addColorStop(1.00, '#0a0a1a');       // faintly lighter bottom
+
+  /* ── Render one frame ── */
+  function frame(t) {
+    /* Sky */
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, W, H);
+
+    /* Stars — dual-wave organic twinkle */
+    const T = t * 0.001 * tSpeed;
+    for (let i = 0, n = stars.length; i < n; i++) {
+      const s  = stars[i];
+      const w1 = Math.sin(T * s.freq + s.phase)                * 0.30;
+      const w2 = Math.sin(T * s.freq * 0.37 + s.phase * 1.73)  * 0.12;
+      let   a  = s.base + w1 + w2;
+      a = a < 0.02 ? 0.02 : a > 1 ? 1 : a;
+
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, 6.2832);
+      ctx.fillStyle = `rgba(${s.cr},${s.cg},${s.cb},${a})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* ════════════════════════════════════════════
+         R E S P O N S I V E   1 6 : 9
+     ════════════════════════════════════════════ */
+  function resize() {
+    const vw = viewport.clientWidth, vh = viewport.clientHeight;
+    let w = vw, h = w / AR;
+    if (h > vh) { h = vh; w = h * AR; }
+    scene.style.width  = w + 'px';
+    scene.style.height = h + 'px';
+  }
+  addEventListener('resize', resize);
+  resize();
+
+  /* ════════════════════════════════════════════
+         I M A G E   C O M P O S I T I N G
+     ════════════════════════════════════════════ */
+  const setEdge = px => {
+    baseImg.style.filter = px > 0 ? `blur(${px}px)` : 'none';
+  };
+  const setBloom = (spread, opacity) => {
+    glowImg.style.filter  = `blur(${spread}px)`;
+    glowImg.style.opacity = opacity;
+  };
+
+  /* ════════════════════════════════════════════
+         C O N T R O L   W I R I N G
+     ════════════════════════════════════════════ */
+  function wire(sliderId, readoutId, fmt, fn) {
+    const sl = $(sliderId), rd = $(readoutId);
+    sl.addEventListener('input', () => {
+      const v = parseFloat(sl.value);
+      rd.textContent = fmt(v);
+      fn(v);
+    });
+  }
+
+  wire('rCount', 'vCount',
+       v => v.toLocaleString(),
+       v => syncCount(v | 0));
+
+  wire('rSpeed', 'vSpeed',
+       v => v.toFixed(1) + '×',
+       v => { tSpeed = v; });
+
+  wire('rEdge', 'vEdge',
+       v => v.toFixed(2) + ' px',
+       v => setEdge(v));
+
+  wire('rBloom', 'vBloom',
+       v => v + ' px',
+       v => setBloom(v, parseFloat($('rOpac').value)));
+
+  wire('rOpac', 'vOpac',
+       v => v.toFixed(2),
+       v => setBloom(parseFloat($('rBloom').value), v));
+
+  /* ════════════════════════════════════════════
+         I N I T I A L I S E
+     ════════════════════════════════════════════ */
+  syncCount(parseInt($('rCount').value));
+  setEdge(parseFloat($('rEdge').value));
+  setBloom(parseFloat($('rBloom').value), parseFloat($('rOpac').value));
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
