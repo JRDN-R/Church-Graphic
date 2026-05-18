@@ -6,8 +6,10 @@
 <title>4K Starfield — 80s Bloom</title>
 <style>
   :root {
-    --panel-h: 88px;
+    --panel-h: 112px;
     --png-scale: 1;
+    --png-x: 0%;
+    --png-y: 0%;
   }
 
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -52,30 +54,28 @@
     width: 100%; height: 100%;
     display: block;
     pointer-events: none;
-    transform: scale(var(--png-scale));
+    transform: translate(var(--png-x), var(--png-y)) scale(var(--png-scale));
     transform-origin: center center;
+    will-change: filter, opacity, transform;
   }
   #baseLayer { z-index: 2; }
   #glowLayer {
     z-index: 3;
     mix-blend-mode: screen;       /* ← the 80s bloom compositing */
-    will-change: filter, opacity, transform;
   }
 
   /* ═══════════ Control Panel ═══════════ */
   #panel {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    min-height: 88px;
-    max-height: min(44vh, 285px);
-    max-height: min(44dvh, 285px);
+    min-height: 104px;
+    max-height: min(42vh, 260px);
+    max-height: min(42dvh, 260px);
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    align-content: center;
-    justify-content: center;
-    gap: 16px 24px;
-    padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
     background: rgba(6, 6, 16, 0.94);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -86,9 +86,50 @@
     z-index: 1000;
   }
 
+  #tabs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 999px;
+    padding: 7px 13px;
+    background: rgba(255, 255, 255, 0.045);
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.7px;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .tab-btn.active {
+    background: rgba(118, 96, 255, 0.22);
+    border-color: rgba(150, 132, 255, 0.38);
+    color: rgba(255, 255, 255, 0.78);
+    box-shadow: 0 0 18px rgba(110, 90, 255, 0.12);
+  }
+
+  .tab-panel {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 16px 24px;
+    flex-wrap: wrap;
+  }
+
+  .tab-panel.active {
+    display: flex;
+  }
+
   .ctl {
-    flex: 0 1 128px;
-    min-width: 118px;
+    flex: 0 1 132px;
+    min-width: 120px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -111,7 +152,7 @@
   /* ═══════════ Range Inputs ═══════════ */
   input[type="range"] {
     -webkit-appearance: none; appearance: none;
-    width: 120px; max-width: 100%; height: 3px;
+    width: 124px; max-width: 100%; height: 3px;
     border-radius: 3px;
     background: rgba(255, 255, 255, 0.07);
     outline: none;
@@ -146,18 +187,30 @@
     border: none;
   }
 
-  .sep {
-    width: 1px; height: 48px;
-    background: rgba(255, 255, 255, 0.045);
-    flex-shrink: 0;
-  }
-
   @media (max-width: 820px) {
     #panel {
+      max-height: min(46vh, 310px);
+      max-height: min(46dvh, 310px);
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    }
+
+    #tabs {
+      justify-content: flex-start;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .tab-btn {
+      flex: 0 0 auto;
+      padding: 8px 13px;
+    }
+
+    .tab-panel.active {
       justify-content: flex-start;
       align-content: flex-start;
       gap: 14px;
-      padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
     }
 
     .ctl {
@@ -185,8 +238,6 @@
       width: 18px;
       height: 18px;
     }
-
-    .sep { display: none; }
   }
 
   @media (max-width: 380px) {
@@ -218,43 +269,69 @@
 
 <!-- ══════════════════ CONTROLS ══════════════════ -->
 <div id="panel">
-  <div class="ctl">
-    <label>Star Amount</label>
-    <input type="range" id="rCount" min="100" max="15000" value="2500" step="50">
-    <span class="v" id="vCount">2,500</span>
-  </div>
-  <div class="ctl">
-    <label>Star Size</label>
-    <input type="range" id="rStarSize" min="0.25" max="5" value="1" step="0.05">
-    <span class="v" id="vStarSize">1.00×</span>
-  </div>
-  <div class="ctl">
-    <label>Twinkle Speed</label>
-    <input type="range" id="rSpeed" min="0.1" max="5" value="1" step="0.1">
-    <span class="v" id="vSpeed">1.0×</span>
+  <div id="tabs" role="tablist" aria-label="Scene controls">
+    <button class="tab-btn active" type="button" data-tab="stars">Stars</button>
+    <button class="tab-btn" type="button" data-tab="png">PNG</button>
+    <button class="tab-btn" type="button" data-tab="look">Look</button>
   </div>
 
-  <div class="sep"></div>
+  <div class="tab-panel active" id="tab-stars">
+    <div class="ctl">
+      <label>Star Amount</label>
+      <input type="range" id="rCount" min="100" max="15000" value="2500" step="50">
+      <span class="v" id="vCount">2,500</span>
+    </div>
+    <div class="ctl">
+      <label>Star Size</label>
+      <input type="range" id="rStarSize" min="0.25" max="5" value="1" step="0.05">
+      <span class="v" id="vStarSize">1.00×</span>
+    </div>
+    <div class="ctl">
+      <label>Twinkle Speed</label>
+      <input type="range" id="rSpeed" min="0.1" max="5" value="1" step="0.1">
+      <span class="v" id="vSpeed">1.0×</span>
+    </div>
+  </div>
 
-  <div class="ctl">
-    <label>PNG Size</label>
-    <input type="range" id="rPngSize" min="0.5" max="2" value="1" step="0.01">
-    <span class="v" id="vPngSize">100%</span>
+  <div class="tab-panel" id="tab-png">
+    <div class="ctl">
+      <label>PNG Size</label>
+      <input type="range" id="rPngSize" min="0.2" max="2.5" value="1" step="0.01">
+      <span class="v" id="vPngSize">100%</span>
+    </div>
+    <div class="ctl">
+      <label>PNG Left / Right</label>
+      <input type="range" id="rPngX" min="-100" max="100" value="0" step="1">
+      <span class="v" id="vPngX">0%</span>
+    </div>
+    <div class="ctl">
+      <label>PNG Up / Down</label>
+      <input type="range" id="rPngY" min="-100" max="100" value="0" step="1">
+      <span class="v" id="vPngY">0%</span>
+    </div>
   </div>
-  <div class="ctl">
-    <label>Base Edge Soften</label>
-    <input type="range" id="rEdge" min="0" max="2" value="0.4" step="0.05">
-    <span class="v" id="vEdge">0.40 px</span>
-  </div>
-  <div class="ctl">
-    <label>80s Bloom Spread</label>
-    <input type="range" id="rBloom" min="0" max="80" value="28" step="1">
-    <span class="v" id="vBloom">28 px</span>
-  </div>
-  <div class="ctl">
-    <label>80s Bloom Opacity</label>
-    <input type="range" id="rOpac" min="0" max="1" value="0.55" step="0.01">
-    <span class="v" id="vOpac">0.55</span>
+
+  <div class="tab-panel" id="tab-look">
+    <div class="ctl">
+      <label>Gradient Brightness</label>
+      <input type="range" id="rGradient" min="0" max="3" value="1" step="0.01">
+      <span class="v" id="vGradient">1.00×</span>
+    </div>
+    <div class="ctl">
+      <label>Base Edge Soften</label>
+      <input type="range" id="rEdge" min="0" max="2" value="0.4" step="0.05">
+      <span class="v" id="vEdge">0.40 px</span>
+    </div>
+    <div class="ctl">
+      <label>80s Bloom Spread</label>
+      <input type="range" id="rBloom" min="0" max="80" value="28" step="1">
+      <span class="v" id="vBloom">28 px</span>
+    </div>
+    <div class="ctl">
+      <label>80s Bloom Opacity</label>
+      <input type="range" id="rOpac" min="0" max="1" value="0.55" step="0.01">
+      <span class="v" id="vOpac">0.55</span>
+    </div>
   </div>
 </div>
 
@@ -270,7 +347,8 @@
      DOM Refs
      ──────────────────────────────────── */
   const $ = id => document.getElementById(id);
-  const viewport = $('viewport'),
+  const root     = document.documentElement,
+        viewport = $('viewport'),
         scene    = $('scene'),
         panel    = $('panel'),
         cvs      = $('starfield'),
@@ -281,9 +359,10 @@
   /* ════════════════════════════════════════════
            S T A R   F I E L D
      ════════════════════════════════════════════ */
-  let stars    = [];
-  let tSpeed   = 1;                         // twinkle speed multiplier
-  let starSize = 1;                         // star size multiplier
+  let stars      = [];
+  let tSpeed     = 1;                       // twinkle speed multiplier
+  let starSize   = 1;                       // star size multiplier
+  let sky        = null;
 
   /** Build one star with randomised properties */
   function createStar() {
@@ -307,12 +386,22 @@
     if    (stars.length > n) stars.length = n;
   }
 
-  /* ── Pre-build the sky gradient once ── */
-  const sky = ctx.createLinearGradient(0, 0, 0, H);
-  sky.addColorStop(0.00, '#000000');       // pitch black top
-  sky.addColorStop(0.50, '#010108');
-  sky.addColorStop(0.78, '#04040d');
-  sky.addColorStop(1.00, '#0a0a1a');       // faintly lighter bottom
+  function clampByte(v) {
+    return Math.max(0, Math.min(255, Math.round(v)));
+  }
+
+  function rgb(r, g, b) {
+    return `rgb(${clampByte(r)}, ${clampByte(g)}, ${clampByte(b)})`;
+  }
+
+  /* ── Rebuild sky gradient when brightness changes ── */
+  function setGradientBrightness(mult) {
+    sky = ctx.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0.00, '#000000');
+    sky.addColorStop(0.50, rgb(1 * mult, 1 * mult, 8 * mult));
+    sky.addColorStop(0.78, rgb(4 * mult, 4 * mult, 13 * mult));
+    sky.addColorStop(1.00, rgb(10 * mult, 10 * mult, 26 * mult));
+  }
 
   /* ── Render one frame ── */
   function frame(t) {
@@ -342,7 +431,7 @@
      ════════════════════════════════════════════ */
   function updatePanelHeight() {
     const h = Math.ceil(panel.getBoundingClientRect().height);
-    document.documentElement.style.setProperty('--panel-h', h + 'px');
+    root.style.setProperty('--panel-h', h + 'px');
     resize();
   }
 
@@ -363,7 +452,13 @@
          I M A G E   C O M P O S I T I N G
      ════════════════════════════════════════════ */
   const setPngSize = scale => {
-    document.documentElement.style.setProperty('--png-scale', scale);
+    root.style.setProperty('--png-scale', scale);
+  };
+  const setPngX = value => {
+    root.style.setProperty('--png-x', value + '%');
+  };
+  const setPngY = value => {
+    root.style.setProperty('--png-y', value + '%');
   };
   const setEdge = px => {
     baseImg.style.filter = px > 0 ? `blur(${px}px)` : 'none';
@@ -372,6 +467,18 @@
     glowImg.style.filter  = `blur(${spread}px)`;
     glowImg.style.opacity = opacity;
   };
+
+  /* ════════════════════════════════════════════
+         T A B S
+     ════════════════════════════════════════════ */
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
+      requestAnimationFrame(updatePanelHeight);
+    });
+  });
 
   /* ════════════════════════════════════════════
          C O N T R O L   W I R I N G
@@ -401,6 +508,18 @@
        v => Math.round(v * 100) + '%',
        v => setPngSize(v));
 
+  wire('rPngX', 'vPngX',
+       v => v + '%',
+       v => setPngX(v));
+
+  wire('rPngY', 'vPngY',
+       v => v + '%',
+       v => setPngY(v));
+
+  wire('rGradient', 'vGradient',
+       v => v.toFixed(2) + '×',
+       v => setGradientBrightness(v));
+
   wire('rEdge', 'vEdge',
        v => v.toFixed(2) + ' px',
        v => setEdge(v));
@@ -419,6 +538,9 @@
   syncCount(parseInt($('rCount').value));
   starSize = parseFloat($('rStarSize').value);
   setPngSize(parseFloat($('rPngSize').value));
+  setPngX(parseFloat($('rPngX').value));
+  setPngY(parseFloat($('rPngY').value));
+  setGradientBrightness(parseFloat($('rGradient').value));
   setEdge(parseFloat($('rEdge').value));
   setBloom(parseFloat($('rBloom').value), parseFloat($('rOpac').value));
   updatePanelHeight();
