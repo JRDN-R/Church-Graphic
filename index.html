@@ -10,6 +10,7 @@
     --png-scale: 1;
     --png-x: 0%;
     --png-y: 0%;
+    --candle-scale: 1;
   }
 
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -47,7 +48,7 @@
     width: 100%; height: 100%;
   }
 
-  /* ═══════════ Dual-Layer Overlay ═══════════ */
+  /* ═══════════ Dual/Triple-Layer Overlay ═══════════ */
   .overlay-img {
     position: absolute;
     top: 0; left: 0;
@@ -62,6 +63,12 @@
   #glowLayer {
     z-index: 3;
     mix-blend-mode: screen;       /* ← the 80s bloom compositing */
+  }
+  #candleLayer {
+    z-index: 4;
+    mix-blend-mode: screen;
+    opacity: 0;
+    transform: translate(var(--png-x), var(--png-y)) scale(var(--candle-scale));
   }
 
   /* ═══════════ Control Panel ═══════════ */
@@ -260,8 +267,13 @@
          src="https://raw.githubusercontent.com/JRDN-R/Church-Graphic/main/darkskysteeple.png"
          alt="" draggable="false">
 
-    <!-- Layer 2 — Glow (heavy blur + screen blend = 80s halation) -->
+    <!-- Layer 2 — Broad 80s bloom -->
     <img id="glowLayer" class="overlay-img"
+         src="https://raw.githubusercontent.com/JRDN-R/Church-Graphic/main/darkskysteeple.png"
+         alt="" draggable="false">
+
+    <!-- Layer 3 — Warm candle/fire breathing glow -->
+    <img id="candleLayer" class="overlay-img"
          src="https://raw.githubusercontent.com/JRDN-R/Church-Graphic/main/darkskysteeple.png"
          alt="" draggable="false">
   </div>
@@ -272,6 +284,7 @@
   <div id="tabs" role="tablist" aria-label="Scene controls">
     <button class="tab-btn active" type="button" data-tab="stars">Stars</button>
     <button class="tab-btn" type="button" data-tab="png">PNG</button>
+    <button class="tab-btn" type="button" data-tab="candle">Candle</button>
     <button class="tab-btn" type="button" data-tab="look">Look</button>
   </div>
 
@@ -311,6 +324,39 @@
     </div>
   </div>
 
+  <div class="tab-panel" id="tab-candle">
+    <div class="ctl">
+      <label>Candle Glow</label>
+      <input type="range" id="rCandleGlow" min="0" max="1" value="0.34" step="0.01">
+      <span class="v" id="vCandleGlow">0.34</span>
+    </div>
+    <div class="ctl">
+      <label>Flicker Amount</label>
+      <input type="range" id="rCandleFlicker" min="0" max="0.6" value="0.14" step="0.01">
+      <span class="v" id="vCandleFlicker">0.14</span>
+    </div>
+    <div class="ctl">
+      <label>Flicker Speed</label>
+      <input type="range" id="rCandleSpeed" min="0.05" max="3" value="0.75" step="0.05">
+      <span class="v" id="vCandleSpeed">0.75×</span>
+    </div>
+    <div class="ctl">
+      <label>Light Spread</label>
+      <input type="range" id="rCandleSpread" min="0" max="100" value="36" step="1">
+      <span class="v" id="vCandleSpread">36 px</span>
+    </div>
+    <div class="ctl">
+      <label>Warmth</label>
+      <input type="range" id="rCandleWarmth" min="0" max="2" value="1.15" step="0.05">
+      <span class="v" id="vCandleWarmth">1.15×</span>
+    </div>
+    <div class="ctl">
+      <label>Breathing Motion</label>
+      <input type="range" id="rCandleMotion" min="0" max="1" value="0.30" step="0.01">
+      <span class="v" id="vCandleMotion">0.30</span>
+    </div>
+  </div>
+
   <div class="tab-panel" id="tab-look">
     <div class="ctl">
       <label>Gradient Brightness</label>
@@ -347,14 +393,15 @@
      DOM Refs
      ──────────────────────────────────── */
   const $ = id => document.getElementById(id);
-  const root     = document.documentElement,
-        viewport = $('viewport'),
-        scene    = $('scene'),
-        panel    = $('panel'),
-        cvs      = $('starfield'),
-        ctx      = cvs.getContext('2d'),
-        baseImg  = $('baseLayer'),
-        glowImg  = $('glowLayer');
+  const root      = document.documentElement,
+        viewport  = $('viewport'),
+        scene     = $('scene'),
+        panel     = $('panel'),
+        cvs       = $('starfield'),
+        ctx       = cvs.getContext('2d'),
+        baseImg   = $('baseLayer'),
+        glowImg   = $('glowLayer'),
+        candleImg = $('candleLayer');
 
   /* ════════════════════════════════════════════
            S T A R   F I E L D
@@ -363,6 +410,17 @@
   let tSpeed     = 1;                       // twinkle speed multiplier
   let starSize   = 1;                       // star size multiplier
   let sky        = null;
+
+  /* ════════════════════════════════════════════
+           C A N D L E   G L O W
+     ════════════════════════════════════════════ */
+  let pngScale      = 1;
+  let candleGlow    = 0.34;
+  let candleFlicker = 0.14;
+  let candleSpeed   = 0.75;
+  let candleSpread  = 36;
+  let candleWarmth  = 1.15;
+  let candleMotion  = 0.30;
 
   /** Build one star with randomised properties */
   function createStar() {
@@ -394,6 +452,10 @@
     return `rgb(${clampByte(r)}, ${clampByte(g)}, ${clampByte(b)})`;
   }
 
+  function clamp(v, min, max) {
+    return Math.max(min, Math.min(max, v));
+  }
+
   /* ── Rebuild sky gradient when brightness changes ── */
   function setGradientBrightness(mult) {
     sky = ctx.createLinearGradient(0, 0, 0, H);
@@ -401,6 +463,27 @@
     sky.addColorStop(0.50, rgb(1 * mult, 1 * mult, 8 * mult));
     sky.addColorStop(0.78, rgb(4 * mult, 4 * mult, 13 * mult));
     sky.addColorStop(1.00, rgb(10 * mult, 10 * mult, 26 * mult));
+  }
+
+  function updateCandle(t) {
+    const T = t * 0.001 * candleSpeed;
+    const wave = (Math.sin(T * 5.10) * 0.48) +
+                 (Math.sin(T * 9.70 + 1.60) * 0.31) +
+                 (Math.sin(T * 16.90 + 0.35) * 0.21);
+    const breathe = clamp(1 + candleFlicker * wave, 0.72, 1.34);
+    const opacity = clamp(candleGlow * breathe, 0, 1);
+    const spread  = Math.max(0, candleSpread * (1 + (breathe - 1) * candleMotion * 0.55));
+    const scale   = pngScale * (1 + (breathe - 1) * candleMotion * 0.018);
+    const warmth  = candleWarmth;
+
+    root.style.setProperty('--candle-scale', scale.toFixed(4));
+    candleImg.style.opacity = opacity.toFixed(3);
+    candleImg.style.filter =
+      `blur(${spread.toFixed(1)}px) ` +
+      `brightness(${(1.06 + warmth * 0.18).toFixed(2)}) ` +
+      `contrast(${(1.02 + warmth * 0.06).toFixed(2)}) ` +
+      `saturate(${(1.18 + warmth * 0.82).toFixed(2)}) ` +
+      `sepia(${(0.10 + warmth * 0.20).toFixed(2)})`;
   }
 
   /* ── Render one frame ── */
@@ -423,6 +506,8 @@
       ctx.fillStyle = `rgba(${s.cr},${s.cg},${s.cb},${a})`;
       ctx.fill();
     }
+
+    updateCandle(t);
     requestAnimationFrame(frame);
   }
 
@@ -452,6 +537,7 @@
          I M A G E   C O M P O S I T I N G
      ════════════════════════════════════════════ */
   const setPngSize = scale => {
+    pngScale = scale;
     root.style.setProperty('--png-scale', scale);
   };
   const setPngX = value => {
@@ -516,6 +602,30 @@
        v => v + '%',
        v => setPngY(v));
 
+  wire('rCandleGlow', 'vCandleGlow',
+       v => v.toFixed(2),
+       v => { candleGlow = v; });
+
+  wire('rCandleFlicker', 'vCandleFlicker',
+       v => v.toFixed(2),
+       v => { candleFlicker = v; });
+
+  wire('rCandleSpeed', 'vCandleSpeed',
+       v => v.toFixed(2) + '×',
+       v => { candleSpeed = v; });
+
+  wire('rCandleSpread', 'vCandleSpread',
+       v => v + ' px',
+       v => { candleSpread = v; });
+
+  wire('rCandleWarmth', 'vCandleWarmth',
+       v => v.toFixed(2) + '×',
+       v => { candleWarmth = v; });
+
+  wire('rCandleMotion', 'vCandleMotion',
+       v => v.toFixed(2),
+       v => { candleMotion = v; });
+
   wire('rGradient', 'vGradient',
        v => v.toFixed(2) + '×',
        v => setGradientBrightness(v));
@@ -536,7 +646,13 @@
          I N I T I A L I S E
      ════════════════════════════════════════════ */
   syncCount(parseInt($('rCount').value));
-  starSize = parseFloat($('rStarSize').value);
+  starSize      = parseFloat($('rStarSize').value);
+  candleGlow    = parseFloat($('rCandleGlow').value);
+  candleFlicker = parseFloat($('rCandleFlicker').value);
+  candleSpeed   = parseFloat($('rCandleSpeed').value);
+  candleSpread  = parseFloat($('rCandleSpread').value);
+  candleWarmth  = parseFloat($('rCandleWarmth').value);
+  candleMotion  = parseFloat($('rCandleMotion').value);
   setPngSize(parseFloat($('rPngSize').value));
   setPngX(parseFloat($('rPngX').value));
   setPngY(parseFloat($('rPngY').value));
