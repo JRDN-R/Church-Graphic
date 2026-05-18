@@ -16,324 +16,49 @@
 <meta name="twitter:title" content="Evening Graphic">
 <meta name="twitter:image" content="https://raw.githubusercontent.com/JRDN-R/Church-Graphic/refs/heads/main/hero.jpg">
 <style>
-  :root {
-    --panel-h: 112px;
-    --png-scale: 1;
-    --png-x: 0%;
-    --png-y: 0%;
-    --candle-scale: 1;
-  }
-
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-  html, body {
-    width: 100%; height: 100%;
-    background: #000;
-    overflow: hidden;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    -webkit-user-select: none;
-    user-select: none;
-  }
-
-  #viewport {
-    width: 100%;
-    height: calc(100vh - var(--panel-h));
-    height: calc(100dvh - var(--panel-h));
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #000;
-  }
-
-  #scene {
-    position: relative;
-    overflow: hidden;
-    background: #000;
-    line-height: 0;
-  }
-
-  #starfield {
-    display: block;
-    width: 100%; height: 100%;
-  }
-
-  .overlay-img,
-  #fireglow {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    display: block;
-    pointer-events: none;
-    transform: translate(var(--png-x), var(--png-y)) scale(var(--png-scale));
-    transform-origin: center center;
-    will-change: filter, opacity, transform;
-  }
-
-  #baseLayer { z-index: 2; }
-
-  #glowLayer {
-    z-index: 3;
-    mix-blend-mode: screen;
-  }
-
-  #candleLayer {
-    z-index: 4;
-    mix-blend-mode: screen;
-    opacity: 0;
-    transform: translate(var(--png-x), var(--png-y)) scale(var(--candle-scale));
-  }
-
-  #fireglow {
-    z-index: 5;
-    mix-blend-mode: screen;
-    opacity: 1;
-  }
-
-  #panel {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    min-height: 104px;
-    max-height: min(42vh, 260px);
-    max-height: min(42dvh, 260px);
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-    background: rgba(6, 6, 16, 0.94);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.04);
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    z-index: 1000;
-  }
-
-  #tabs {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .tab-btn {
-    appearance: none;
-    -webkit-appearance: none;
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 999px;
-    padding: 7px 13px;
-    background: rgba(255, 255, 255, 0.045);
-    color: rgba(255, 255, 255, 0.42);
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 1.7px;
-    text-transform: uppercase;
-    cursor: pointer;
-  }
-
-  .tab-btn.active {
-    background: rgba(118, 96, 255, 0.22);
-    border-color: rgba(150, 132, 255, 0.38);
-    color: rgba(255, 255, 255, 0.78);
-    box-shadow: 0 0 18px rgba(110, 90, 255, 0.12);
-  }
-
-  .tab-panel {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    gap: 16px 24px;
-    flex-wrap: wrap;
-  }
-
-  .tab-panel.active { display: flex; }
-
-  .ctl {
-    flex: 0 1 132px;
-    min-width: 120px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .ctl label {
-    font-size: 8.5px;
-    font-weight: 700;
-    letter-spacing: 1.8px;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.30);
-    white-space: nowrap;
-  }
-
-  .ctl .v {
-    font-family: "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
-    font-size: 9px;
-    color: rgba(255, 255, 255, 0.22);
-  }
-
-  input[type="range"] {
-    -webkit-appearance: none; appearance: none;
-    width: 124px; max-width: 100%; height: 3px;
-    border-radius: 3px;
-    background: rgba(255, 255, 255, 0.07);
-    outline: none;
-    cursor: pointer;
-    touch-action: pan-y;
-  }
-
-  input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 14px; height: 14px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 38% 32%, #a798ff, #5e4dcf);
-    box-shadow: 0 0 10px rgba(110, 90, 255, 0.45), 0 0 3px rgba(110, 90, 255, 0.3);
-    cursor: pointer;
-    transition: box-shadow 0.2s;
-  }
-
-  input[type="range"]::-webkit-slider-thumb:hover {
-    box-shadow: 0 0 18px rgba(110, 90, 255, 0.8), 0 0 5px rgba(110, 90, 255, 0.5);
-  }
-
-  input[type="range"]::-moz-range-thumb {
-    width: 14px; height: 14px; border: none;
-    border-radius: 50%;
-    background: radial-gradient(circle at 38% 32%, #a798ff, #5e4dcf);
-    box-shadow: 0 0 10px rgba(110, 90, 255, 0.45);
-    cursor: pointer;
-  }
-
-  input[type="range"]::-moz-range-track {
-    height: 3px;
-    border-radius: 3px;
-    background: rgba(255, 255, 255, 0.07);
-    border: none;
-  }
-
-  /* ===== Export tab styles ===== */
-  #exportBtn {
-    appearance: none; -webkit-appearance: none;
-    border: 1px solid rgba(150, 132, 255, 0.38);
-    border-radius: 999px;
-    padding: 10px 28px;
-    background: rgba(118, 96, 255, 0.22);
-    color: rgba(255, 255, 255, 0.82);
-    font-size: 10px; font-weight: 800;
-    letter-spacing: 1.7px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: background 0.2s, box-shadow 0.2s;
-  }
-  #exportBtn:hover:not(:disabled) {
-    background: rgba(118, 96, 255, 0.36);
-    box-shadow: 0 0 22px rgba(110, 90, 255, 0.18);
-  }
-  #exportBtn:disabled {
-    opacity: 0.45; cursor: default;
-  }
-  #exportProgress {
-    width: 100%; max-width: 420px;
-  }
-  .export-bar-track {
-    background: rgba(255,255,255,0.07);
-    border-radius: 4px; height: 6px;
-    overflow: hidden;
-  }
-  .export-bar-fill {
-    height: 100%; width: 0%;
-    background: linear-gradient(90deg, #5e4dcf, #a798ff);
-    transition: width 0.15s;
-  }
-  #exportStatus {
-    font-size: 9.5px; margin-top: 5px;
-    color: rgba(255,255,255,0.32);
-    text-align: center; display: block;
-    font-family: "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
-  }
-
-  @media (max-width: 820px) {
-    #panel {
-      max-height: min(46vh, 310px);
-      max-height: min(46dvh, 310px);
-      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-    }
-
-    #tabs {
-      justify-content: flex-start;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      padding-bottom: 2px;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .tab-btn {
-      flex: 0 0 auto;
-      padding: 8px 13px;
-    }
-
-    .tab-panel.active {
-      justify-content: flex-start;
-      align-content: flex-start;
-      gap: 14px;
-    }
-
-    .ctl {
-      flex: 1 1 calc(50% - 14px);
-      min-width: 138px;
-      align-items: stretch;
-    }
-
-    .ctl label,
-    .ctl .v { text-align: center; }
-
-    input[type="range"] {
-      width: 100%;
-      height: 4px;
-    }
-
-    input[type="range"]::-webkit-slider-thumb {
-      width: 18px;
-      height: 18px;
-    }
-
-    input[type="range"]::-moz-range-thumb {
-      width: 18px;
-      height: 18px;
-    }
-  }
-
-  @media (max-width: 380px) {
-    .ctl { flex-basis: 100%; }
-  }
+  :root{--panel-h:112px;--png-scale:1;--png-x:0%;--png-y:0%;--candle-scale:1}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-user-select:none;user-select:none}
+  #viewport{width:100%;height:calc(100vh - var(--panel-h));height:calc(100dvh - var(--panel-h));display:flex;align-items:center;justify-content:center;background:#000}
+  #scene{position:relative;overflow:hidden;background:#000;line-height:0}
+  #starfield{display:block;width:100%;height:100%}
+  .overlay-img,#fireglow{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;transform:translate(var(--png-x),var(--png-y)) scale(var(--png-scale));transform-origin:center center;will-change:filter,opacity,transform}
+  #baseLayer{z-index:2}
+  #glowLayer{z-index:3;mix-blend-mode:screen}
+  #candleLayer{z-index:4;mix-blend-mode:screen;opacity:0;transform:translate(var(--png-x),var(--png-y)) scale(var(--candle-scale))}
+  #fireglow{z-index:5;mix-blend-mode:screen;opacity:1}
+  #panel{position:fixed;left:0;right:0;bottom:0;z-index:1000;min-height:104px;max-height:min(42vh,260px);max-height:min(42dvh,260px);display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:rgba(6,6,16,.94);border-top:1px solid rgba(255,255,255,.04);overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+  #tabs{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+  .tab-btn{appearance:none;-webkit-appearance:none;border:1px solid rgba(255,255,255,.07);border-radius:999px;padding:7px 13px;background:rgba(255,255,255,.045);color:rgba(255,255,255,.42);font-size:9px;font-weight:800;letter-spacing:1.7px;text-transform:uppercase;cursor:pointer}
+  .tab-btn.active{background:rgba(118,96,255,.22);border-color:rgba(150,132,255,.38);color:rgba(255,255,255,.78);box-shadow:0 0 18px rgba(110,90,255,.12)}
+  .tab-panel{display:none;align-items:center;justify-content:center;gap:16px 24px;flex-wrap:wrap}
+  .tab-panel.active{display:flex}
+  .ctl{flex:0 1 132px;min-width:120px;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .ctl label{font-size:8.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:rgba(255,255,255,.30);white-space:nowrap}
+  .ctl .v{font-family:"SF Mono","Cascadia Code","Fira Code",Consolas,monospace;font-size:9px;color:rgba(255,255,255,.22)}
+  input[type="range"]{-webkit-appearance:none;appearance:none;width:124px;max-width:100%;height:3px;border-radius:3px;background:rgba(255,255,255,.07);outline:none;cursor:pointer;touch-action:pan-y}
+  input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 38% 32%,#a798ff,#5e4dcf);box-shadow:0 0 10px rgba(110,90,255,.45),0 0 3px rgba(110,90,255,.3);cursor:pointer;transition:box-shadow .2s}
+  input[type="range"]::-webkit-slider-thumb:hover{box-shadow:0 0 18px rgba(110,90,255,.8),0 0 5px rgba(110,90,255,.5)}
+  input[type="range"]::-moz-range-thumb{width:14px;height:14px;border:0;border-radius:50%;background:radial-gradient(circle at 38% 32%,#a798ff,#5e4dcf);box-shadow:0 0 10px rgba(110,90,255,.45);cursor:pointer}
+  input[type="range"]::-moz-range-track{height:3px;border-radius:3px;background:rgba(255,255,255,.07);border:0}
+  #exportBtn{appearance:none;-webkit-appearance:none;border:1px solid rgba(150,132,255,.38);border-radius:999px;padding:10px 28px;background:rgba(118,96,255,.22);color:rgba(255,255,255,.82);font-size:10px;font-weight:800;letter-spacing:1.7px;text-transform:uppercase;cursor:pointer;transition:background .2s,box-shadow .2s}
+  #exportBtn:hover:not(:disabled){background:rgba(118,96,255,.36);box-shadow:0 0 22px rgba(110,90,255,.18)}
+  #exportBtn:disabled{opacity:.45;cursor:default}
+  #exportProgress{width:100%;max-width:420px}.export-bar-track{height:6px;overflow:hidden;background:rgba(255,255,255,.07);border-radius:4px}.export-bar-fill{height:100%;width:0;background:linear-gradient(90deg,#5e4dcf,#a798ff);transition:width .15s}#exportStatus{display:block;margin-top:5px;text-align:center;font-family:"SF Mono","Cascadia Code","Fira Code",Consolas,monospace;font-size:9.5px;color:rgba(255,255,255,.32)}
+  @media (max-width:820px){#panel{max-height:min(46vh,310px);max-height:min(46dvh,310px);padding:10px 12px calc(10px + env(safe-area-inset-bottom))}#tabs{justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}.tab-btn{flex:0 0 auto;padding:8px 13px}.tab-panel.active{justify-content:flex-start;align-content:flex-start;gap:14px}.ctl{flex:1 1 calc(50% - 14px);min-width:138px;align-items:stretch}.ctl label,.ctl .v{text-align:center}input[type="range"]{width:100%;height:4px}input[type="range"]::-webkit-slider-thumb{width:18px;height:18px}input[type="range"]::-moz-range-thumb{width:18px;height:18px}}
+  @media (max-width:380px){.ctl{flex-basis:100%}}
 </style>
 </head>
 <body>
-
 <div id="viewport">
   <div id="scene">
     <canvas id="starfield" width="3840" height="2160"></canvas>
-
-    <img id="baseLayer" class="overlay-img"
-         crossorigin="anonymous"
-         src="https://raw.githubusercontent.com/JRDN-R/Church-Graphic/main/darkskysteeple-last.png"
-         alt="" draggable="false">
-
-    <img id="glowLayer" class="overlay-img"
-         crossorigin="anonymous"
-         src="https://raw.githubusercontent.com/JRDN-R/Church-Graphic/main/darkskysteeple-last.png"
-         alt="" draggable="false">
-
-    <img id="candleLayer" class="overlay-img"
-         crossorigin="anonymous"
-         src="https://raw.githubusercontent.com/JRDN-R/Church-Graphic/main/darkskysteeple-last.png"
-         alt="" draggable="false">
-
+    <img id="baseLayer" class="overlay-img" crossorigin="anonymous" src="https://raw.githubusercontent.com/JRDN-R/Church-Graphic/main/darkskysteeple-last.png" alt="" draggable="false">
+    <img id="glowLayer" class="overlay-img" crossorigin="anonymous" src="https://raw.githubusercontent.com/JRDN-R/Church-Graphic/main/darkskysteeple-last.png" alt="" draggable="false">
+    <img id="candleLayer" class="overlay-img" crossorigin="anonymous" src="https://raw.githubusercontent.com/JRDN-R/Church-Graphic/main/darkskysteeple-last.png" alt="" draggable="false">
     <canvas id="fireglow" width="3840" height="2160"></canvas>
   </div>
 </div>
-
 <div id="panel">
   <div id="tabs" role="tablist" aria-label="Scene controls">
     <button class="tab-btn active" type="button" data-tab="stars">Stars</button>
@@ -342,705 +67,74 @@
     <button class="tab-btn" type="button" data-tab="look">Look</button>
     <button class="tab-btn" type="button" data-tab="export">Export</button>
   </div>
-
   <div class="tab-panel active" id="tab-stars">
-    <div class="ctl">
-      <label>Star Amount</label>
-      <input type="range" id="rCount" min="100" max="15000" value="250" step="50">
-      <span class="v" id="vCount">250</span>
-    </div>
-    <div class="ctl">
-      <label>Star Size</label>
-      <input type="range" id="rStarSize" min="0.25" max="5" value="1.60" step="0.05">
-      <span class="v" id="vStarSize">1.60x</span>
-    </div>
-    <div class="ctl">
-      <label>Twinkle Speed</label>
-      <input type="range" id="rSpeed" min="0.1" max="5" value="4.4" step="0.1">
-      <span class="v" id="vSpeed">4.4x</span>
-    </div>
+    <div class="ctl"><label>Star Amount</label><input type="range" id="rCount" min="100" max="15000" value="250" step="50"><span class="v" id="vCount">250</span></div>
+    <div class="ctl"><label>Star Size</label><input type="range" id="rStarSize" min="0.25" max="5" value="1.60" step="0.05"><span class="v" id="vStarSize">1.60x</span></div>
+    <div class="ctl"><label>Twinkle Speed</label><input type="range" id="rSpeed" min="0.1" max="5" value="4.4" step="0.1"><span class="v" id="vSpeed">4.4x</span></div>
   </div>
-
   <div class="tab-panel" id="tab-png">
-    <div class="ctl">
-      <label>PNG Size</label>
-      <input type="range" id="rPngSize" min="0.2" max="2.5" value="0.83" step="0.01">
-      <span class="v" id="vPngSize">83%</span>
-    </div>
-    <div class="ctl">
-      <label>PNG Left / Right</label>
-      <input type="range" id="rPngX" min="-100" max="100" value="-11" step="1">
-      <span class="v" id="vPngX">-11%</span>
-    </div>
-    <div class="ctl">
-      <label>PNG Up / Down</label>
-      <input type="range" id="rPngY" min="-100" max="100" value="11" step="1">
-      <span class="v" id="vPngY">11%</span>
-    </div>
+    <div class="ctl"><label>PNG Size</label><input type="range" id="rPngSize" min="0.2" max="2.5" value="0.83" step="0.01"><span class="v" id="vPngSize">83%</span></div>
+    <div class="ctl"><label>PNG Left / Right</label><input type="range" id="rPngX" min="-100" max="100" value="-11" step="1"><span class="v" id="vPngX">-11%</span></div>
+    <div class="ctl"><label>PNG Up / Down</label><input type="range" id="rPngY" min="-100" max="100" value="11" step="1"><span class="v" id="vPngY">11%</span></div>
   </div>
-
   <div class="tab-panel" id="tab-candle">
-    <div class="ctl">
-      <label>Window Glow</label>
-      <input type="range" id="rCandleGlow" min="0" max="1.4" value="0.15" step="0.01">
-      <span class="v" id="vCandleGlow">0.15</span>
-    </div>
-    <div class="ctl">
-      <label>Flicker Amount</label>
-      <input type="range" id="rCandleFlicker" min="0" max="0.8" value="0.80" step="0.01">
-      <span class="v" id="vCandleFlicker">0.80</span>
-    </div>
-    <div class="ctl">
-      <label>Flicker Speed</label>
-      <input type="range" id="rCandleSpeed" min="0.05" max="4" value="0.45" step="0.05">
-      <span class="v" id="vCandleSpeed">0.45x</span>
-    </div>
-    <div class="ctl">
-      <label>Light Spread</label>
-      <input type="range" id="rCandleSpread" min="0" max="120" value="90" step="1">
-      <span class="v" id="vCandleSpread">90 px</span>
-    </div>
-    <div class="ctl">
-      <label>Warmth</label>
-      <input type="range" id="rCandleWarmth" min="0" max="2" value="1.65" step="0.05">
-      <span class="v" id="vCandleWarmth">1.65x</span>
-    </div>
-    <div class="ctl">
-      <label>Spill to Trees</label>
-      <input type="range" id="rCandleSpill" min="0" max="1.5" value="0.20" step="0.01">
-      <span class="v" id="vCandleSpill">0.20</span>
-    </div>
-    <div class="ctl">
-      <label>Breathing Motion</label>
-      <input type="range" id="rCandleMotion" min="0" max="1" value="0.75" step="0.01">
-      <span class="v" id="vCandleMotion">0.75</span>
-    </div>
+    <div class="ctl"><label>Window Glow</label><input type="range" id="rCandleGlow" min="0" max="1.4" value="0.15" step="0.01"><span class="v" id="vCandleGlow">0.15</span></div>
+    <div class="ctl"><label>Flicker Amount</label><input type="range" id="rCandleFlicker" min="0" max="0.8" value="0.80" step="0.01"><span class="v" id="vCandleFlicker">0.80</span></div>
+    <div class="ctl"><label>Flicker Speed</label><input type="range" id="rCandleSpeed" min="0.05" max="4" value="0.45" step="0.05"><span class="v" id="vCandleSpeed">0.45x</span></div>
+    <div class="ctl"><label>Light Spread</label><input type="range" id="rCandleSpread" min="0" max="120" value="90" step="1"><span class="v" id="vCandleSpread">90 px</span></div>
+    <div class="ctl"><label>Warmth</label><input type="range" id="rCandleWarmth" min="0" max="2" value="1.65" step="0.05"><span class="v" id="vCandleWarmth">1.65x</span></div>
+    <div class="ctl"><label>Spill to Trees</label><input type="range" id="rCandleSpill" min="0" max="1.5" value="0.20" step="0.01"><span class="v" id="vCandleSpill">0.20</span></div>
+    <div class="ctl"><label>Breathing Motion</label><input type="range" id="rCandleMotion" min="0" max="1" value="0.75" step="0.01"><span class="v" id="vCandleMotion">0.75</span></div>
   </div>
-
   <div class="tab-panel" id="tab-look">
-    <div class="ctl">
-      <label>Gradient Brightness</label>
-      <input type="range" id="rGradient" min="0" max="3" value="1.24" step="0.01">
-      <span class="v" id="vGradient">1.24x</span>
-    </div>
-    <div class="ctl">
-      <label>Base Edge Soften</label>
-      <input type="range" id="rEdge" min="0" max="2" value="0.00" step="0.05">
-      <span class="v" id="vEdge">0.00 px</span>
-    </div>
-    <div class="ctl">
-      <label>80s Bloom Spread</label>
-      <input type="range" id="rBloom" min="0" max="80" value="0" step="1">
-      <span class="v" id="vBloom">0 px</span>
-    </div>
-    <div class="ctl">
-      <label>80s Bloom Opacity</label>
-      <input type="range" id="rOpac" min="0" max="1" value="0.00" step="0.01">
-      <span class="v" id="vOpac">0.00</span>
-    </div>
+    <div class="ctl"><label>Gradient Brightness</label><input type="range" id="rGradient" min="0" max="3" value="1.24" step="0.01"><span class="v" id="vGradient">1.24x</span></div>
+    <div class="ctl"><label>Base Edge Soften</label><input type="range" id="rEdge" min="0" max="2" value="0.00" step="0.05"><span class="v" id="vEdge">0.00 px</span></div>
+    <div class="ctl"><label>80s Bloom Spread</label><input type="range" id="rBloom" min="0" max="80" value="0" step="1"><span class="v" id="vBloom">0 px</span></div>
+    <div class="ctl"><label>80s Bloom Opacity</label><input type="range" id="rOpac" min="0" max="1" value="0.00" step="0.01"><span class="v" id="vOpac">0.00</span></div>
   </div>
-
-  <!-- ===== Export Tab ===== -->
   <div class="tab-panel" id="tab-export">
     <div style="display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;">
       <button id="exportBtn" type="button">Export 15 s Loop &bull; 1080p60 MP4</button>
-      <div id="exportProgress" style="display:none;">
-        <div class="export-bar-track"><div class="export-bar-fill" id="exportBar"></div></div>
-        <span id="exportStatus">Preparing…</span>
-      </div>
+      <div id="exportProgress" style="display:none;"><div class="export-bar-track"><div class="export-bar-fill" id="exportBar"></div></div><span id="exportStatus">Preparing…</span></div>
     </div>
   </div>
 </div>
-
 <script>
 (() => {
-  /* ======================================================================
-     CONSTANTS
-     ====================================================================== */
-  const W = 3840, H = 2160, AR = W / H;
-  const EW = 1920, EH = 1080;                     // export resolution
-  const TWO_PI  = Math.PI * 2;
-  const LOOP_SECONDS = 15;
-  const EXPORT_FPS   = 60;
-  const TOTAL_FRAMES = LOOP_SECONDS * EXPORT_FPS;  // 900
-  const STAR_SEED    = 31415;
-  const MAX_STARS    = 15000;
-
-  /* ======================================================================
-     DOM REFS
-     ====================================================================== */
-  const $ = id => document.getElementById(id);
-  const root      = document.documentElement,
-        viewport  = $('viewport'),
-        scene     = $('scene'),
-        panel     = $('panel'),
-        cvs       = $('starfield'),
-        ctx       = cvs.getContext('2d'),
-        fireCvs   = $('fireglow'),
-        fireCtx   = fireCvs.getContext('2d'),
-        baseImg   = $('baseLayer'),
-        glowImg   = $('glowLayer'),
-        candleImg = $('candleLayer');
-
-  /* ======================================================================
-     SEEDED PRNG  (Mulberry32)
-     ====================================================================== */
-  function mulberry32(seed) {
-    return function () {
-      seed |= 0;
-      seed = seed + 0x6D2B79F5 | 0;
-      let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
-      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
-    };
-  }
-
-  /* ======================================================================
-     SCENE STATE  (all current slider values live here)
-     ====================================================================== */
-  let starCount     = 250;
-  let starSize      = 1.60;
-  let tSpeed        = 4.4;
-  let pngScale      = 0.83;
-  let pngX          = -11;
-  let pngY          = 11;
-  let gradMult      = 1.24;
-  let edgeBlur      = 0;
-  let bloomSpread   = 0;
-  let bloomOpacity  = 0;
-  let candleGlow    = 0.15;
-  let candleFlicker = 0.80;
-  let candleSpeed   = 0.45;
-  let candleSpread  = 90;
-  let candleWarmth  = 1.65;
-  let candleMotion  = 0.75;
-  let candleSpill   = 0.20;
-  let sky           = null;
-
-  /* ======================================================================
-     STAR POOL  (deterministic from seed)
-     ====================================================================== */
-  let starPool = [];
-
-  function initStarPool() {
-    const rng = mulberry32(STAR_SEED);
-    starPool = [];
-    for (let i = 0; i < MAX_STARS; i++) {
-      starPool.push({
-        x:  rng() * W,
-        y:  rng() * H,
-        r:  0.3 + rng() * 1.8,
-        base: 0.18 + rng() * 0.62,
-        phase1: rng() * TWO_PI,
-        phase2: rng() * TWO_PI,
-        /* Base cycle counts (at tSpeed = 1).
-           Actual cycles = round(baseCycles * tSpeed).
-           Keeping them small keeps the visual "slow gentle twinkle" feel. */
-        baseCycles1: 1 + Math.floor(rng() * 4),   // 1‑4
-        baseCycles2: 1 + Math.floor(rng() * 3),   // 1‑3
-        cr: 212 + (rng() * 43) | 0,
-        cg: 220 + (rng() * 35) | 0,
-        cb: 240 + (rng() * 15) | 0
-      });
-    }
-  }
-  initStarPool();
-
-  /* ======================================================================
-     FIRE HOTSPOTS  (unchanged from original)
-     ====================================================================== */
-  const fireHotspots = [
-    { cx:0.331, cy:0.657, rx:0.035, ry:0.122, a:1.00, spill:false, phase:0.10 },
-    { cx:0.392, cy:0.650, rx:0.052, ry:0.135, a:1.08, spill:false, phase:1.25 },
-    { cx:0.363, cy:0.657, rx:0.130, ry:0.190, a:0.42, spill:false, phase:2.00 },
-    { cx:0.368, cy:0.540, rx:0.105, ry:0.080, a:0.20, spill:true,  phase:0.70 },
-    { cx:0.352, cy:0.770, rx:0.195, ry:0.120, a:0.22, spill:true,  phase:2.60 },
-    { cx:0.470, cy:0.800, rx:0.240, ry:0.095, a:0.16, spill:true,  phase:1.70 },
-    { cx:0.235, cy:0.835, rx:0.255, ry:0.150, a:0.13, spill:true,  phase:3.20 },
-    { cx:0.695, cy:0.835, rx:0.315, ry:0.145, a:0.09, spill:true,  phase:4.00 }
-  ];
-
-  /*  Base cycle counts for each fire sine layer (at candleSpeed = 1).
-      Derived from original T‑domain frequencies:
-        freq → LOOP_SECONDS × freq / (2π) ≈ integer cycles                */
-  const FC = { w1:12, w2:23, w3:40, h1:10, h2:28, d1:6, d2:5 };
-
-  /* ======================================================================
-     HELPERS
-     ====================================================================== */
-  function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
-  function clampByte(v) { return clamp(Math.round(v), 0, 255); }
-  function rgb(r, g, b) {
-    return `rgb(${clampByte(r)},${clampByte(g)},${clampByte(b)})`;
-  }
-  function rgba(r, g, b, a) {
-    return `rgba(${clampByte(r)},${clampByte(g)},${clampByte(b)},${clamp(a,0,1).toFixed(4)})`;
-  }
-
-  /** Convert a base cycle count + speed into integer cycles (for export) or
-      raw float cycles (for live preview). */
-  function lc(base, speed, quantize) {
-    const raw = base * speed;
-    return quantize ? Math.max(1, Math.round(raw)) : Math.max(0.1, raw);
-  }
-
-  /* ======================================================================
-     SKY GRADIENT
-     ====================================================================== */
-  function setGradientBrightness(mult) {
-    sky = ctx.createLinearGradient(0, 0, 0, H);
-    sky.addColorStop(0.00, '#000000');
-    sky.addColorStop(0.50, rgb(1*mult, 1*mult, 8*mult));
-    sky.addColorStop(0.78, rgb(4*mult, 4*mult, 13*mult));
-    sky.addColorStop(1.00, rgb(10*mult, 10*mult, 26*mult));
-  }
-
-  /* Same but returns a gradient for an arbitrary context / height */
-  function makeSkyGrad(c, h, mult) {
-    const g = c.createLinearGradient(0, 0, 0, h);
-    g.addColorStop(0.00, '#000000');
-    g.addColorStop(0.50, rgb(1*mult, 1*mult, 8*mult));
-    g.addColorStop(0.78, rgb(4*mult, 4*mult, 13*mult));
-    g.addColorStop(1.00, rgb(10*mult, 10*mult, 26*mult));
-    return g;
-  }
-
-  /* ======================================================================
-     DRAW ELLIPSE GLOW  (parameterised for any context + size)
-     ====================================================================== */
-  function drawEllipseGlow(fc, w, h, cxP, cyP, rxP, ryP, alpha, warmth, sMult) {
-    if (alpha <= 0 || sMult <= 0) return;
-    const cx = cxP * w, cy = cyP * h;
-    const rx = Math.max(1, rxP * w * sMult);
-    const ry = Math.max(1, ryP * h * sMult);
-    const hotG = 215 + warmth * 10, hotB = 118 - warmth * 24;
-    const midG = 150 + warmth * 14, midB = 45  - warmth * 10;
-    const lowG = 85  + warmth * 8;
-    fc.save();
-    fc.translate(cx, cy);
-    fc.scale(rx, ry);
-    const g = fc.createRadialGradient(0, 0, 0.02, 0, 0, 1);
-    g.addColorStop(0.00, rgba(255, hotG, hotB, alpha * 0.88));
-    g.addColorStop(0.20, rgba(255, 190,  82,  alpha * 0.68));
-    g.addColorStop(0.45, rgba(255, midG, midB, alpha * 0.32));
-    g.addColorStop(0.72, rgba(255, lowG,  18,  alpha * 0.12));
-    g.addColorStop(1.00, rgba(255,  80,   0,   0));
-    fc.fillStyle = g;
-    fc.beginPath();
-    fc.arc(0, 0, 1, 0, TWO_PI);
-    fc.fill();
-    fc.restore();
-  }
-
-  /* ======================================================================
-     COMPUTE FIRE STATE  (returns numbers only – no DOM side‑effects)
-     ====================================================================== */
-  function computeFireState(p, q) {
-    const wave =
-      Math.sin(TWO_PI * lc(FC.w1, candleSpeed, q) * p)          * 0.48 +
-      Math.sin(TWO_PI * lc(FC.w2, candleSpeed, q) * p + 1.60)   * 0.31 +
-      Math.sin(TWO_PI * lc(FC.w3, candleSpeed, q) * p + 0.35)   * 0.21;
-    const breathe     = clamp(1 + candleFlicker * wave, 0.70, 1.38);
-    const spreadMult  = candleSpread / 44;
-    const motionScale = 1 + (breathe - 1) * candleMotion * 0.018;
-    const broadOp     = clamp(candleGlow * 0.16 * breathe, 0, 0.32);
-    return { breathe, spreadMult, motionScale, broadOp };
-  }
-
-  /* ======================================================================
-     RENDER FIRE GLOW onto a given context (w×h canvas)
-     ====================================================================== */
-  function renderFireGlow(p, q, fc, w, h, st) {
-    const cH1 = lc(FC.h1, candleSpeed, q), cH2 = lc(FC.h2, candleSpeed, q);
-    const cD1 = lc(FC.d1, candleSpeed, q), cD2 = lc(FC.d2, candleSpeed, q);
-    fc.clearRect(0, 0, w, h);
-    fc.globalCompositeOperation = 'lighter';
-    for (const hs of fireHotspots) {
-      const local = 1 + candleFlicker * (
-        Math.sin(TWO_PI * cH1 * p + hs.phase)       * 0.42 +
-        Math.sin(TWO_PI * cH2 * p + hs.phase * 1.7) * 0.24);
-      const dX = Math.sin(TWO_PI * cD1 * p + hs.phase) * 0.0018 * candleMotion;
-      const dY = Math.cos(TWO_PI * cD2 * p + hs.phase) * 0.0014 * candleMotion;
-      const alpha = hs.a * candleGlow * (hs.spill ? candleSpill : 1) * local;
-      drawEllipseGlow(fc, w, h,
-        hs.cx + dX, hs.cy + dY, hs.rx, hs.ry,
-        alpha, candleWarmth, st.spreadMult * st.motionScale);
-    }
-    fc.globalCompositeOperation = 'source-over';
-  }
-
-  /* ======================================================================
-     LIVE PREVIEW LOOP
-     ====================================================================== */
-  let animStart = null;
-
-  function frame(t) {
-    if (animStart === null) animStart = t;
-    const p = (((t - animStart) * 0.001) % LOOP_SECONDS) / LOOP_SECONDS;
-
-    /* sky */
-    ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, W, H);
-
-    /* stars (unquantised for smooth slider tweaking) */
-    for (let i = 0, n = starCount; i < n; i++) {
-      const s = starPool[i];
-      const c1 = lc(s.baseCycles1, tSpeed, false);
-      const c2 = lc(s.baseCycles2, tSpeed, false);
-      let a = s.base
-            + Math.sin(TWO_PI * c1 * p + s.phase1) * 0.30
-            + Math.sin(TWO_PI * c2 * p + s.phase2) * 0.12;
-      a = a < 0.02 ? 0.02 : a > 1 ? 1 : a;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r * starSize, 0, TWO_PI);
-      ctx.fillStyle = `rgba(${s.cr},${s.cg},${s.cb},${a})`;
-      ctx.fill();
-    }
-
-    /* fire glow + candle layer DOM updates */
-    const fs = computeFireState(p, false);
-    renderFireGlow(p, false, fireCtx, W, H, fs);
-    root.style.setProperty('--candle-scale', (pngScale * fs.motionScale).toFixed(4));
-    candleImg.style.opacity = fs.broadOp.toFixed(3);
-    candleImg.style.filter =
-      `blur(${Math.max(0, candleSpread * 0.65).toFixed(1)}px) ` +
-      `brightness(${(1.02 + candleWarmth * 0.10).toFixed(2)}) ` +
-      `saturate(${(1.10 + candleWarmth * 0.45).toFixed(2)}) ` +
-      `sepia(${(0.08 + candleWarmth * 0.12).toFixed(2)})`;
-
-    requestAnimationFrame(frame);
-  }
-
-  /* ======================================================================
-     LAYOUT
-     ====================================================================== */
-  function updatePanelHeight() {
-    const h = Math.ceil(panel.getBoundingClientRect().height);
-    root.style.setProperty('--panel-h', h + 'px');
-    resize();
-  }
-  function resize() {
-    const vw = viewport.clientWidth, vh = viewport.clientHeight;
-    let w = vw, h = w / AR;
-    if (h > vh) { h = vh; w = h * AR; }
-    scene.style.width  = w + 'px';
-    scene.style.height = h + 'px';
-  }
-  addEventListener('resize', updatePanelHeight);
-  if ('ResizeObserver' in window) new ResizeObserver(updatePanelHeight).observe(panel);
-
-  /* ======================================================================
-     CSS SETTERS  (for live preview DOM)
-     ====================================================================== */
-  const setPngSize = s => { pngScale = s; root.style.setProperty('--png-scale', s); };
-  const setPngXcss = v => root.style.setProperty('--png-x', v + '%');
-  const setPngYcss = v => root.style.setProperty('--png-y', v + '%');
-  const setEdge    = px => { baseImg.style.filter = px > 0 ? `blur(${px}px)` : 'none'; };
-  const setBloom   = (sp, op) => { glowImg.style.filter = `blur(${sp}px)`; glowImg.style.opacity = op; };
-
-  /* ======================================================================
-     TABS
-     ====================================================================== */
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const tab = btn.dataset.tab;
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
-      requestAnimationFrame(updatePanelHeight);
-    });
-  });
-
-  /* ======================================================================
-     CONTROL WIRING
-     ====================================================================== */
-  function wire(sid, rid, fmt, fn) {
-    const sl = $(sid), rd = $(rid);
-    sl.addEventListener('input', () => { const v = parseFloat(sl.value); rd.textContent = fmt(v); fn(v); });
-  }
-
-  wire('rCount',    'vCount',    v => v.toLocaleString(),   v => { starCount = v | 0; });
-  wire('rStarSize', 'vStarSize', v => v.toFixed(2) + 'x',  v => { starSize = v; });
-  wire('rSpeed',    'vSpeed',    v => v.toFixed(1) + 'x',   v => { tSpeed = v; });
-  wire('rPngSize',  'vPngSize',  v => Math.round(v*100)+'%',v => setPngSize(v));
-  wire('rPngX',     'vPngX',     v => v + '%',              v => { pngX = v; setPngXcss(v); });
-  wire('rPngY',     'vPngY',     v => v + '%',              v => { pngY = v; setPngYcss(v); });
-  wire('rCandleGlow',    'vCandleGlow',    v => v.toFixed(2),       v => { candleGlow = v; });
-  wire('rCandleFlicker', 'vCandleFlicker', v => v.toFixed(2),       v => { candleFlicker = v; });
-  wire('rCandleSpeed',   'vCandleSpeed',   v => v.toFixed(2) + 'x', v => { candleSpeed = v; });
-  wire('rCandleSpread',  'vCandleSpread',  v => v + ' px',          v => { candleSpread = v; });
-  wire('rCandleWarmth',  'vCandleWarmth',  v => v.toFixed(2) + 'x', v => { candleWarmth = v; });
-  wire('rCandleSpill',   'vCandleSpill',   v => v.toFixed(2),       v => { candleSpill = v; });
-  wire('rCandleMotion',  'vCandleMotion',  v => v.toFixed(2),       v => { candleMotion = v; });
-  wire('rGradient', 'vGradient', v => v.toFixed(2) + 'x',  v => { gradMult = v; setGradientBrightness(v); });
-  wire('rEdge',     'vEdge',     v => v.toFixed(2) + ' px', v => { edgeBlur = v; setEdge(v); });
-  wire('rBloom',    'vBloom',    v => v + ' px',            v => { bloomSpread = v; setBloom(v, bloomOpacity); });
-  wire('rOpac',     'vOpac',     v => v.toFixed(2),         v => { bloomOpacity = v; setBloom(bloomSpread, v); });
-
-  /* ======================================================================
-     INIT FROM SLIDER DEFAULTS
-     ====================================================================== */
-  starCount     = parseInt($('rCount').value);
-  starSize      = parseFloat($('rStarSize').value);
-  tSpeed        = parseFloat($('rSpeed').value);
-  candleGlow    = parseFloat($('rCandleGlow').value);
-  candleFlicker = parseFloat($('rCandleFlicker').value);
-  candleSpeed   = parseFloat($('rCandleSpeed').value);
-  candleSpread  = parseFloat($('rCandleSpread').value);
-  candleWarmth  = parseFloat($('rCandleWarmth').value);
-  candleSpill   = parseFloat($('rCandleSpill').value);
-  candleMotion  = parseFloat($('rCandleMotion').value);
-  gradMult      = parseFloat($('rGradient').value);
-  edgeBlur      = parseFloat($('rEdge').value);
-  bloomSpread   = parseFloat($('rBloom').value);
-  bloomOpacity  = parseFloat($('rOpac').value);
-  setPngSize(parseFloat($('rPngSize').value));
-  pngX = parseFloat($('rPngX').value); setPngXcss(pngX);
-  pngY = parseFloat($('rPngY').value); setPngYcss(pngY);
-  setGradientBrightness(gradMult);
-  setEdge(edgeBlur);
-  setBloom(bloomSpread, bloomOpacity);
-  updatePanelHeight();
+  const W=3840,H=2160,AR=W/H,EW=1920,EH=1080,TWO_PI=Math.PI*2,LOOP_SECONDS=15,EXPORT_FPS=60,TOTAL_FRAMES=LOOP_SECONDS*EXPORT_FPS,STAR_SEED=31415,MAX_STARS=15000;
+  const $=id=>document.getElementById(id);
+  const root=document.documentElement,viewport=$('viewport'),scene=$('scene'),panel=$('panel'),cvs=$('starfield'),ctx=cvs.getContext('2d'),fireCvs=$('fireglow'),fireCtx=fireCvs.getContext('2d'),baseImg=$('baseLayer'),glowImg=$('glowLayer'),candleImg=$('candleLayer');
+  let starCount=250,starSize=1.60,tSpeed=4.4,pngScale=0.83,pngX=-11,pngY=11,gradMult=1.24,edgeBlur=0,bloomSpread=0,bloomOpacity=0,candleGlow=0.15,candleFlicker=0.80,candleSpeed=0.45,candleSpread=90,candleWarmth=1.65,candleMotion=0.75,candleSpill=0.20,sky=null;
+  function mulberry32(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  const rng=mulberry32(STAR_SEED),starPool=[];
+  for(let i=0;i<MAX_STARS;i++){starPool.push({x:rng()*W,y:rng()*H,r:.3+rng()*1.8,base:.18+rng()*.62,phase1:rng()*TWO_PI,phase2:rng()*TWO_PI,baseCycles1:1+Math.floor(rng()*4),baseCycles2:1+Math.floor(rng()*3),cr:212+(rng()*43|0),cg:220+(rng()*35|0),cb:240+(rng()*15|0)})}
+  const fireHotspots=[{cx:.331,cy:.657,rx:.035,ry:.122,a:1,spill:false,phase:.10},{cx:.392,cy:.650,rx:.052,ry:.135,a:1.08,spill:false,phase:1.25},{cx:.363,cy:.657,rx:.130,ry:.190,a:.42,spill:false,phase:2},{cx:.368,cy:.540,rx:.105,ry:.080,a:.20,spill:true,phase:.70},{cx:.352,cy:.770,rx:.195,ry:.120,a:.22,spill:true,phase:2.60},{cx:.470,cy:.800,rx:.240,ry:.095,a:.16,spill:true,phase:1.70},{cx:.235,cy:.835,rx:.255,ry:.150,a:.13,spill:true,phase:3.20},{cx:.695,cy:.835,rx:.315,ry:.145,a:.09,spill:true,phase:4}];
+  const FC={w1:12,w2:23,w3:40,h1:10,h2:28,d1:6,d2:5};
+  const clamp=(v,lo,hi)=>v<lo?lo:v>hi?hi:v,clampByte=v=>clamp(Math.round(v),0,255),rgb=(r,g,b)=>`rgb(${clampByte(r)},${clampByte(g)},${clampByte(b)})`,rgba=(r,g,b,a)=>`rgba(${clampByte(r)},${clampByte(g)},${clampByte(b)},${clamp(a,0,1).toFixed(4)})`;
+  function lc(base,speed,quantize){const raw=base*speed;return quantize?Math.max(1,Math.round(raw)):Math.max(.1,raw)}
+  function setGradientBrightness(mult){sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#000000');sky.addColorStop(.5,rgb(1*mult,1*mult,8*mult));sky.addColorStop(.78,rgb(4*mult,4*mult,13*mult));sky.addColorStop(1,rgb(10*mult,10*mult,26*mult))}
+  function makeSkyGrad(c,h,mult){const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#000000');g.addColorStop(.5,rgb(1*mult,1*mult,8*mult));g.addColorStop(.78,rgb(4*mult,4*mult,13*mult));g.addColorStop(1,rgb(10*mult,10*mult,26*mult));return g}
+  function drawEllipseGlow(fc,w,h,cxP,cyP,rxP,ryP,alpha,warmth,sMult){if(alpha<=0||sMult<=0)return;const cx=cxP*w,cy=cyP*h,rx=Math.max(1,rxP*w*sMult),ry=Math.max(1,ryP*h*sMult),hotG=215+warmth*10,hotB=118-warmth*24,midG=150+warmth*14,midB=45-warmth*10,lowG=85+warmth*8;fc.save();fc.translate(cx,cy);fc.scale(rx,ry);const g=fc.createRadialGradient(0,0,.02,0,0,1);g.addColorStop(0,rgba(255,hotG,hotB,alpha*.88));g.addColorStop(.20,rgba(255,190,82,alpha*.68));g.addColorStop(.45,rgba(255,midG,midB,alpha*.32));g.addColorStop(.72,rgba(255,lowG,18,alpha*.12));g.addColorStop(1,rgba(255,80,0,0));fc.fillStyle=g;fc.beginPath();fc.arc(0,0,1,0,TWO_PI);fc.fill();fc.restore()}
+  function computeFireState(p,q){const wave=Math.sin(TWO_PI*lc(FC.w1,candleSpeed,q)*p)*.48+Math.sin(TWO_PI*lc(FC.w2,candleSpeed,q)*p+1.60)*.31+Math.sin(TWO_PI*lc(FC.w3,candleSpeed,q)*p+.35)*.21;const breathe=clamp(1+candleFlicker*wave,.70,1.38),spreadMult=candleSpread/44,motionScale=1+(breathe-1)*candleMotion*.018,broadOp=clamp(candleGlow*.16*breathe,0,.32);return{breathe,spreadMult,motionScale,broadOp}}
+  function renderFireGlow(p,q,fc,w,h,st){const cH1=lc(FC.h1,candleSpeed,q),cH2=lc(FC.h2,candleSpeed,q),cD1=lc(FC.d1,candleSpeed,q),cD2=lc(FC.d2,candleSpeed,q);fc.clearRect(0,0,w,h);fc.globalCompositeOperation='lighter';for(const hs of fireHotspots){const local=1+candleFlicker*(Math.sin(TWO_PI*cH1*p+hs.phase)*.42+Math.sin(TWO_PI*cH2*p+hs.phase*1.7)*.24),dX=Math.sin(TWO_PI*cD1*p+hs.phase)*.0018*candleMotion,dY=Math.cos(TWO_PI*cD2*p+hs.phase)*.0014*candleMotion,alpha=hs.a*candleGlow*(hs.spill?candleSpill:1)*local;drawEllipseGlow(fc,w,h,hs.cx+dX,hs.cy+dY,hs.rx,hs.ry,alpha,candleWarmth,st.spreadMult*st.motionScale)}fc.globalCompositeOperation='source-over'}
+  function updatePanelHeight(){root.style.setProperty('--panel-h',Math.ceil(panel.getBoundingClientRect().height)+'px');resize()}
+  function resize(){const vw=viewport.clientWidth,vh=viewport.clientHeight;let w=vw,h=w/AR;if(h>vh){h=vh;w=h*AR}scene.style.width=w+'px';scene.style.height=h+'px'}
+  addEventListener('resize',updatePanelHeight);if('ResizeObserver'in window)new ResizeObserver(updatePanelHeight).observe(panel);
+  const setPngSize=s=>{pngScale=s;root.style.setProperty('--png-scale',s)},setPngXcss=v=>root.style.setProperty('--png-x',v+'%'),setPngYcss=v=>root.style.setProperty('--png-y',v+'%'),setEdge=px=>{baseImg.style.filter=px>0?`blur(${px}px)`:'none'},setBloom=(sp,op)=>{glowImg.style.filter=`blur(${sp}px)`;glowImg.style.opacity=op};
+  document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',()=>{const tab=btn.dataset.tab;document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b===btn));document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id===`tab-${tab}`));requestAnimationFrame(updatePanelHeight)}));
+  function wire(sid,rid,fmt,fn){const sl=$(sid),rd=$(rid);sl.addEventListener('input',()=>{const v=parseFloat(sl.value);rd.textContent=fmt(v);fn(v)})}
+  wire('rCount','vCount',v=>v.toLocaleString(),v=>{starCount=v|0});wire('rStarSize','vStarSize',v=>v.toFixed(2)+'x',v=>{starSize=v});wire('rSpeed','vSpeed',v=>v.toFixed(1)+'x',v=>{tSpeed=v});wire('rPngSize','vPngSize',v=>Math.round(v*100)+'%',v=>setPngSize(v));wire('rPngX','vPngX',v=>v+'%',v=>{pngX=v;setPngXcss(v)});wire('rPngY','vPngY',v=>v+'%',v=>{pngY=v;setPngYcss(v)});wire('rCandleGlow','vCandleGlow',v=>v.toFixed(2),v=>{candleGlow=v});wire('rCandleFlicker','vCandleFlicker',v=>v.toFixed(2),v=>{candleFlicker=v});wire('rCandleSpeed','vCandleSpeed',v=>v.toFixed(2)+'x',v=>{candleSpeed=v});wire('rCandleSpread','vCandleSpread',v=>v+' px',v=>{candleSpread=v});wire('rCandleWarmth','vCandleWarmth',v=>v.toFixed(2)+'x',v=>{candleWarmth=v});wire('rCandleSpill','vCandleSpill',v=>v.toFixed(2),v=>{candleSpill=v});wire('rCandleMotion','vCandleMotion',v=>v.toFixed(2),v=>{candleMotion=v});wire('rGradient','vGradient',v=>v.toFixed(2)+'x',v=>{gradMult=v;setGradientBrightness(v)});wire('rEdge','vEdge',v=>v.toFixed(2)+' px',v=>{edgeBlur=v;setEdge(v)});wire('rBloom','vBloom',v=>v+' px',v=>{bloomSpread=v;setBloom(v,bloomOpacity)});wire('rOpac','vOpac',v=>v.toFixed(2),v=>{bloomOpacity=v;setBloom(bloomSpread,v)});
+  starCount=parseInt($('rCount').value);starSize=parseFloat($('rStarSize').value);tSpeed=parseFloat($('rSpeed').value);candleGlow=parseFloat($('rCandleGlow').value);candleFlicker=parseFloat($('rCandleFlicker').value);candleSpeed=parseFloat($('rCandleSpeed').value);candleSpread=parseFloat($('rCandleSpread').value);candleWarmth=parseFloat($('rCandleWarmth').value);candleSpill=parseFloat($('rCandleSpill').value);candleMotion=parseFloat($('rCandleMotion').value);gradMult=parseFloat($('rGradient').value);edgeBlur=parseFloat($('rEdge').value);bloomSpread=parseFloat($('rBloom').value);bloomOpacity=parseFloat($('rOpac').value);setPngSize(parseFloat($('rPngSize').value));pngX=parseFloat($('rPngX').value);setPngXcss(pngX);pngY=parseFloat($('rPngY').value);setPngYcss(pngY);setGradientBrightness(gradMult);setEdge(edgeBlur);setBloom(bloomSpread,bloomOpacity);updatePanelHeight();
+  let animStart=null;
+  function frame(t){if(animStart===null)animStart=t;const p=(((t-animStart)*.001)%LOOP_SECONDS)/LOOP_SECONDS;ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);for(let i=0,n=starCount;i<n;i++){const s=starPool[i],c1=lc(s.baseCycles1,tSpeed,false),c2=lc(s.baseCycles2,tSpeed,false);let a=s.base+Math.sin(TWO_PI*c1*p+s.phase1)*.30+Math.sin(TWO_PI*c2*p+s.phase2)*.12;a=a<.02?.02:a>1?1:a;ctx.beginPath();ctx.arc(s.x,s.y,s.r*starSize,0,TWO_PI);ctx.fillStyle=`rgba(${s.cr},${s.cg},${s.cb},${a})`;ctx.fill()}const fs=computeFireState(p,false);renderFireGlow(p,false,fireCtx,W,H,fs);root.style.setProperty('--candle-scale',(pngScale*fs.motionScale).toFixed(4));candleImg.style.opacity=fs.broadOp.toFixed(3);candleImg.style.filter=`blur(${Math.max(0,candleSpread*.65).toFixed(1)}px) brightness(${(1.02+candleWarmth*.10).toFixed(2)}) saturate(${(1.10+candleWarmth*.45).toFixed(2)}) sepia(${(.08+candleWarmth*.12).toFixed(2)})`;requestAnimationFrame(frame)}
   requestAnimationFrame(frame);
-
-  /* ======================================================================
-     EXPORT — COMPOSITE A SINGLE FRAME ONTO AN OFFSCREEN 1920×1080 CANVAS
-     ====================================================================== */
-  /**
-   *  p        : 0–1 loop progress (frame / totalFrames)
-   *  ec       : CanvasRenderingContext2D for the 1920×1080 export canvas
-   *  ftCtx    : CanvasRenderingContext2D for a 1920×1080 fire‑glow temp canvas
-   *  ftCvs    : the HTMLCanvasElement for the fire temp canvas
-   *  blurS    : blur scaling factor  (EW / displayed scene width)
-   *  img      : loaded HTMLImageElement for the PNG overlay
-   */
-  function renderExportFrame(p, ec, ftCtx, ftCvs, blurS, img) {
-    const sc = EW / W;  // 0.5 – star coordinate scale
-
-    /* ---- 1. sky gradient ---- */
-    ec.globalCompositeOperation = 'source-over';
-    ec.globalAlpha = 1;
-    ec.filter = 'none';
-    ec.fillStyle = makeSkyGrad(ec, EH, gradMult);
-    ec.fillRect(0, 0, EW, EH);
-
-    /* ---- 2. stars (quantised for perfect loop) ---- */
-    for (let i = 0, n = starCount; i < n; i++) {
-      const s  = starPool[i];
-      const c1 = Math.max(1, Math.round(s.baseCycles1 * tSpeed));
-      const c2 = Math.max(1, Math.round(s.baseCycles2 * tSpeed));
-      let a = s.base
-            + Math.sin(TWO_PI * c1 * p + s.phase1) * 0.30
-            + Math.sin(TWO_PI * c2 * p + s.phase2) * 0.12;
-      a = a < 0.02 ? 0.02 : a > 1 ? 1 : a;
-      ec.beginPath();
-      ec.arc(s.x * sc, s.y * sc, s.r * starSize * sc, 0, TWO_PI);
-      ec.fillStyle = `rgba(${s.cr},${s.cg},${s.cb},${a.toFixed(4)})`;
-      ec.fill();
-    }
-
-    /* ---- helper: draw image with the PNG CSS transform ---- */
-    function drawLayer(blend, alpha, filterStr, scaleVal) {
-      ec.save();
-      ec.globalCompositeOperation = blend;
-      ec.globalAlpha = alpha;
-      if (filterStr) ec.filter = filterStr;
-      const tx = (pngX / 100) * EW, ty = (pngY / 100) * EH;
-      ec.translate(EW / 2 + tx, EH / 2 + ty);
-      ec.scale(scaleVal, scaleVal);
-      ec.translate(-EW / 2, -EH / 2);
-      ec.drawImage(img, 0, 0, EW, EH);
-      ec.restore();
-    }
-
-    /* ---- 3. base PNG layer ---- */
-    drawLayer('source-over', 1,
-      edgeBlur > 0 ? `blur(${(edgeBlur * blurS).toFixed(1)}px)` : null,
-      pngScale);
-
-    /* ---- 4. glow/bloom PNG layer ---- */
-    if (bloomOpacity > 0) {
-      drawLayer('screen', bloomOpacity,
-        bloomSpread > 0 ? `blur(${(bloomSpread * blurS).toFixed(1)}px)` : null,
-        pngScale);
-    }
-
-    /* ---- 5. candle broad‑glow PNG layer ---- */
-    const fs = computeFireState(p, true);
-    if (fs.broadOp > 0) {
-      const cb  = Math.max(0, candleSpread * 0.65) * blurS;
-      const bri = (1.02 + candleWarmth * 0.10).toFixed(2);
-      const sat = (1.10 + candleWarmth * 0.45).toFixed(2);
-      const sep = (0.08 + candleWarmth * 0.12).toFixed(2);
-      drawLayer('screen', fs.broadOp,
-        `blur(${cb.toFixed(1)}px) brightness(${bri}) saturate(${sat}) sepia(${sep})`,
-        pngScale * fs.motionScale);
-    }
-
-    /* ---- 6. fire glow hotspots ---- */
-    renderFireGlow(p, true, ftCtx, EW, EH, fs);
-    ec.save();
-    ec.globalCompositeOperation = 'screen';
-    ec.globalAlpha = 1;
-    ec.filter = 'none';
-    const tx = (pngX / 100) * EW, ty = (pngY / 100) * EH;
-    ec.translate(EW / 2 + tx, EH / 2 + ty);
-    ec.scale(pngScale, pngScale);
-    ec.translate(-EW / 2, -EH / 2);
-    ec.drawImage(ftCvs, 0, 0);
-    ec.restore();
-  }
-
-  /* ======================================================================
-     EXPORT — PUBLIC API (also used by Node / Puppeteer helper)
-     ====================================================================== */
-  /* Expose for Puppeteer‑based export (see export‑node.js) */
-  let _exportCvs = null, _exportCtx = null, _fireTmpCvs = null, _fireTmpCtx = null;
-
-  function ensureExportCanvases() {
-    if (!_exportCvs) {
-      _exportCvs  = document.createElement('canvas'); _exportCvs.width  = EW; _exportCvs.height  = EH;
-      _exportCtx  = _exportCvs.getContext('2d');
-      _fireTmpCvs = document.createElement('canvas'); _fireTmpCvs.width = EW; _fireTmpCvs.height = EH;
-      _fireTmpCtx = _fireTmpCvs.getContext('2d');
-    }
-  }
-
-  /**  Render a single export frame (for Puppeteer usage).
-       Returns the 1920×1080 canvas as a data URL. */
-  window.renderExportFrameAt = function (frameIndex, totalFrames) {
-    ensureExportCanvases();
-    const blurS = EW / Math.max(1, scene.clientWidth);
-    renderExportFrame(frameIndex / totalFrames, _exportCtx, _fireTmpCtx, _fireTmpCvs, blurS, baseImg);
-    return _exportCvs.toDataURL('image/png');
-  };
-
-  /* ======================================================================
-     EXPORT — IN‑BROWSER  (WebCodecs + mp4‑muxer → H.264 MP4)
-     ====================================================================== */
-  $('exportBtn').addEventListener('click', exportVideo);
-
-  async function exportVideo() {
-    const btn  = $('exportBtn');
-    const prog = $('exportProgress');
-    const bar  = $('exportBar');
-    const stat = $('exportStatus');
-
-    btn.disabled = true;
-    prog.style.display = 'block';
-    bar.style.width = '0%';
-
-    /* ---- 1. Feature‑detect WebCodecs ---- */
-    if (typeof VideoEncoder === 'undefined') {
-      stat.textContent = '❌ WebCodecs not available. Use Chrome / Edge, or the Node.js export script.';
-      btn.disabled = false; return;
-    }
-
-    /* ---- 2. Check H.264 encoding support ---- */
-    stat.textContent = 'Checking H.264 support…';
-    const codecStr = 'avc1.64002A';   // High profile, level 4.2
-    const encCfg = {
-      codec: codecStr, width: EW, height: EH,
-      bitrate: 12_000_000, framerate: EXPORT_FPS,
-      latencyMode: 'quality',
-      avc: { format: 'avc' }
-    };
-    try {
-      const sup = await VideoEncoder.isConfigSupported(encCfg);
-      if (!sup.supported) throw 0;
-    } catch (_) {
-      stat.textContent = '❌ H.264 encoding not supported on this device. Use the Node.js export script.';
-      btn.disabled = false; return;
-    }
-
-    /* ---- 3. Dynamically load mp4‑muxer ---- */
-    stat.textContent = 'Loading MP4 muxer…';
-    let Mp4;
-    try {
-      Mp4 = await import('https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.mjs');
-    } catch (e) {
-      stat.textContent = '❌ Failed to load mp4-muxer: ' + e.message;
-      btn.disabled = false; return;
-    }
-
-    /* ---- 4. Wait for PNG ---- */
-    if (!baseImg.complete || !baseImg.naturalWidth) {
-      stat.textContent = 'Waiting for PNG image…';
-      await new Promise(r => { baseImg.onload = r; baseImg.onerror = () => r(); });
-    }
-    if (!baseImg.naturalWidth) {
-      stat.textContent = '❌ PNG overlay failed to load.';
-      btn.disabled = false; return;
-    }
-
-    /* ---- 5. Prepare offscreen canvases ---- */
-    ensureExportCanvases();
-    const blurS = EW / Math.max(1, scene.clientWidth);
-
-    /* ---- 6. Encoder + Muxer ---- */
-    const target = new Mp4.ArrayBufferTarget();
-    const muxer  = new Mp4.Muxer({
-      target,
-      video: { codec: 'avc', width: EW, height: EH },
-      fastStart: 'in-memory'
-    });
-
-    let encErr = null;
-    const encoder = new VideoEncoder({
-      output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
-      error:  (e) => { encErr = e; }
-    });
-    encoder.configure(encCfg);
-
-    /* ---- 7. Frame‑by‑frame render + encode ---- */
-    stat.textContent = 'Encoding…';
-    const usPerFrame = Math.round(1_000_000 / EXPORT_FPS);
-
-    for (let i = 0; i < TOTAL_FRAMES; i++) {
-      if (encErr) break;
-
-      renderExportFrame(
-        i / TOTAL_FRAMES,
-        _exportCtx, _fireTmpCtx, _fireTmpCvs, blurS, baseImg);
-
-      const vf = new VideoFrame(_exportCvs, { timestamp: i * usPerFrame });
-      encoder.encode(vf, { keyFrame: i % 120 === 0 });
-      vf.close();
-
-      /* yield to UI every 10 frames */
-      if (i % 10 === 0) {
-        const pct = Math.round(i / TOTAL_FRAMES * 100);
-        bar.style.width = pct + '%';
-        stat.textContent = `Encoding: ${pct}%  (${i} / ${TOTAL_FRAMES})`;
-        await new Promise(r => setTimeout(r, 0));
-      }
-    }
-
-    if (encErr) {
-      stat.textContent = '❌ Encoding error: ' + encErr.message;
-      btn.disabled = false; return;
-    }
-
-    /* ---- 8. Finalize ---- */
-    stat.textContent = 'Finalizing MP4…';
-    await encoder.flush();
-    muxer.finalize();
-
-    /* ---- 9. Download ---- */
-    const blob = new Blob([target.buffer], { type: 'video/mp4' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url;
-    a.download = `church-loop-${LOOP_SECONDS}s-1080p60.mp4`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-
-    bar.style.width = '100%';
-    stat.textContent = `✅ Done — ${(blob.size / 1048576).toFixed(1)} MB downloaded.`;
-    btn.disabled = false;
-  }
-
+  function renderExportFrame(p,ec,ftCtx,ftCvs,blurS,img){const sc=EW/W;ec.globalCompositeOperation='source-over';ec.globalAlpha=1;ec.filter='none';ec.fillStyle=makeSkyGrad(ec,EH,gradMult);ec.fillRect(0,0,EW,EH);for(let i=0,n=starCount;i<n;i++){const s=starPool[i],c1=Math.max(1,Math.round(s.baseCycles1*tSpeed)),c2=Math.max(1,Math.round(s.baseCycles2*tSpeed));let a=s.base+Math.sin(TWO_PI*c1*p+s.phase1)*.30+Math.sin(TWO_PI*c2*p+s.phase2)*.12;a=a<.02?.02:a>1?1:a;ec.beginPath();ec.arc(s.x*sc,s.y*sc,s.r*starSize*sc,0,TWO_PI);ec.fillStyle=`rgba(${s.cr},${s.cg},${s.cb},${a.toFixed(4)})`;ec.fill()}function drawLayer(blend,alpha,filterStr,scaleVal){ec.save();ec.globalCompositeOperation=blend;ec.globalAlpha=alpha;if(filterStr)ec.filter=filterStr;const tx=pngX/100*EW,ty=pngY/100*EH;ec.translate(EW/2+tx,EH/2+ty);ec.scale(scaleVal,scaleVal);ec.translate(-EW/2,-EH/2);ec.drawImage(img,0,0,EW,EH);ec.restore()}drawLayer('source-over',1,edgeBlur>0?`blur(${(edgeBlur*blurS).toFixed(1)}px)`:null,pngScale);if(bloomOpacity>0)drawLayer('screen',bloomOpacity,bloomSpread>0?`blur(${(bloomSpread*blurS).toFixed(1)}px)`:null,pngScale);const fs=computeFireState(p,true);if(fs.broadOp>0){const cb=Math.max(0,candleSpread*.65)*blurS,bri=(1.02+candleWarmth*.10).toFixed(2),sat=(1.10+candleWarmth*.45).toFixed(2),sep=(.08+candleWarmth*.12).toFixed(2);drawLayer('screen',fs.broadOp,`blur(${cb.toFixed(1)}px) brightness(${bri}) saturate(${sat}) sepia(${sep})`,pngScale*fs.motionScale)}renderFireGlow(p,true,ftCtx,EW,EH,fs);ec.save();ec.globalCompositeOperation='screen';ec.globalAlpha=1;ec.filter='none';const tx=pngX/100*EW,ty=pngY/100*EH;ec.translate(EW/2+tx,EH/2+ty);ec.scale(pngScale,pngScale);ec.translate(-EW/2,-EH/2);ec.drawImage(ftCvs,0,0);ec.restore()}
+  let _exportCvs=null,_exportCtx=null,_fireTmpCvs=null,_fireTmpCtx=null;
+  function ensureExportCanvases(){if(!_exportCvs){_exportCvs=document.createElement('canvas');_exportCvs.width=EW;_exportCvs.height=EH;_exportCtx=_exportCvs.getContext('2d');_fireTmpCvs=document.createElement('canvas');_fireTmpCvs.width=EW;_fireTmpCvs.height=EH;_fireTmpCtx=_fireTmpCvs.getContext('2d')}}
+  window.renderExportFrameAt=function(frameIndex,totalFrames){ensureExportCanvases();const blurS=EW/Math.max(1,scene.clientWidth);renderExportFrame(frameIndex/totalFrames,_exportCtx,_fireTmpCtx,_fireTmpCvs,blurS,baseImg);return _exportCvs.toDataURL('image/png')};
+  async function loadMp4Muxer(stat){stat.textContent='Loading MP4 muxer…';if(!window.Mp4Muxer){await new Promise((resolve,reject)=>{const existing=document.querySelector('script[data-mp4-muxer]');if(existing){existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',()=>reject(new Error('CDN script blocked or unavailable')),{once:true});return}const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.js';s.async=true;s.crossOrigin='anonymous';s.dataset.mp4Muxer='true';s.onload=resolve;s.onerror=()=>reject(new Error('CDN script blocked or unavailable'));document.head.appendChild(s)})}if(!window.Mp4Muxer||!window.Mp4Muxer.Muxer||!window.Mp4Muxer.ArrayBufferTarget)throw new Error('MP4 muxer loaded but did not expose the expected API');return window.Mp4Muxer}
+  $('exportBtn').addEventListener('click',exportVideo);
+  async function exportVideo(){const btn=$('exportBtn'),prog=$('exportProgress'),bar=$('exportBar'),stat=$('exportStatus');btn.disabled=true;prog.style.display='block';bar.style.width='0%';if(typeof VideoEncoder==='undefined'){stat.textContent='❌ WebCodecs not available. Use Chrome / Edge, or the Node.js export script.';btn.disabled=false;return}stat.textContent='Checking H.264 support…';const codecStr='avc1.64002A',encCfg={codec:codecStr,width:EW,height:EH,bitrate:12000000,framerate:EXPORT_FPS,latencyMode:'quality',avc:{format:'avc'}};try{const sup=await VideoEncoder.isConfigSupported(encCfg);if(!sup.supported)throw new Error('unsupported')}catch(_){stat.textContent='❌ H.264 encoding not supported on this device. Use the Node.js export script.';btn.disabled=false;return}let Mp4;try{Mp4=await loadMp4Muxer(stat)}catch(e){stat.textContent='❌ Failed to load MP4 muxer: '+e.message;btn.disabled=false;return}if(!baseImg.complete||!baseImg.naturalWidth){stat.textContent='Waiting for PNG image…';await new Promise(r=>{baseImg.onload=r;baseImg.onerror=()=>r()})}if(!baseImg.naturalWidth){stat.textContent='❌ PNG overlay failed to load.';btn.disabled=false;return}ensureExportCanvases();const blurS=EW/Math.max(1,scene.clientWidth),target=new Mp4.ArrayBufferTarget(),muxer=new Mp4.Muxer({target,video:{codec:'avc',width:EW,height:EH},fastStart:'in-memory'});let encErr=null;const encoder=new VideoEncoder({output:(chunk,meta)=>muxer.addVideoChunk(chunk,meta),error:e=>{encErr=e}});encoder.configure(encCfg);stat.textContent='Encoding…';const usPerFrame=Math.round(1000000/EXPORT_FPS);for(let i=0;i<TOTAL_FRAMES;i++){if(encErr)break;renderExportFrame(i/TOTAL_FRAMES,_exportCtx,_fireTmpCtx,_fireTmpCvs,blurS,baseImg);const vf=new VideoFrame(_exportCvs,{timestamp:i*usPerFrame});encoder.encode(vf,{keyFrame:i%120===0});vf.close();if(i%10===0){const pct=Math.round(i/TOTAL_FRAMES*100);bar.style.width=pct+'%';stat.textContent=`Encoding: ${pct}%  (${i} / ${TOTAL_FRAMES})`;await new Promise(r=>setTimeout(r,0))}}if(encErr){stat.textContent='❌ Encoding error: '+encErr.message;btn.disabled=false;return}stat.textContent='Finalizing MP4…';await encoder.flush();muxer.finalize();const blob=new Blob([target.buffer],{type:'video/mp4'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`church-loop-${LOOP_SECONDS}s-1080p60.mp4`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);bar.style.width='100%';stat.textContent=`✅ Done — ${(blob.size/1048576).toFixed(1)} MB downloaded.`;btn.disabled=false}
 })();
 </script>
 </body>
